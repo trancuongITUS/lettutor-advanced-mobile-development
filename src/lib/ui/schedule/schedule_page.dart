@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:src/ui/History/History.dart';
+import 'package:src/ui/history/history_page.dart';
 import 'package:src/ui/session_widget/session.dart';
 
 import '../Courses/courses.dart';
