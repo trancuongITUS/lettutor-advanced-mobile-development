@@ -51,7 +51,7 @@ class Login extends StatelessWidget {
                 const EdgeInsets.only(top: 15, right: 15, bottom: 0, left: 15),
             child: Column(
               children: [
-                Image.asset("login_bg.png"),
+                Image.asset("img/img/login_bg.png"),
                 const SizedBox(
                   height: 30,
                 ),
@@ -97,15 +97,15 @@ class OrtherLogin extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset("facebook.png", width: 30, height: 30),
+              Image.asset("img/fb.png", width: 30, height: 30),
               const SizedBox(
                 width: 20,
               ),
-              Image.asset("google.png", width: 30, height: 30),
+              Image.asset("img/gg.png", width: 30, height: 30),
               const SizedBox(
                 width: 20,
               ),
-              Image.asset("smartphone.png", width: 30, height: 30),
+              Image.asset("img/phone.png", width: 30, height: 30),
             ],
           ),
           Container(

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:src/ui/courses/filter.dart';
+import 'package:src/ui/home/home.dart';
 import 'package:src/ui/history/history_page.dart';
-import 'package:src/ui/session_widget/session.dart';
 
-import '../courses/courses_page.dart';
-import '../home/home.dart';
+import '../schedule/schedule_page.dart';
+import 'content.dart';
 
-class Schedule extends StatelessWidget {
-  const Schedule({super.key});
+class Courses extends StatelessWidget {
+  const Courses({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -177,62 +179,135 @@ class Schedule extends StatelessWidget {
           ),
         ),
         body: SingleChildScrollView(
-          child: Container(
-            padding: const EdgeInsets.all(25),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Icon(
-                    Icons.calendar_month,
-                    color: Colors.blueAccent,
-                    size: 130,
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  const Text(
-                    "Schedule",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(top: 10, bottom: 20),
-                    decoration: const BoxDecoration(
-                        border: Border(
-                      left: BorderSide(
-                        color: Colors.grey,
-                        width: 2.5,
-                      ),
-                    )),
-                    padding: const EdgeInsets.only(left: 10),
-                    child: const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Here is a list of the sessions you have booked",
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          Text(
-                              "You can track when the meeting starts, join the meeting with one click or can cancel the meeting before 2 hours",
-                              style: TextStyle(fontSize: 16)),
-                        ]),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  ListView(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    children: const [
-                      Session(
-                          typeSession: "Schedule", timeOrNumber: '1 lesson'),
-                      Session(
-                        typeSession: "Schedule",
-                        timeOrNumber: "1 lesson",
-                      ),
-                    ],
-                  ),
-                ]),
+            child: Container(
+          padding: const EdgeInsets.all(30),
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SearchCourse(),
+              SizedBox(
+                height: 15,
+              ),
+              Text(
+                  "LiveTutor has built the most quality, methodical and scientific courses in the fields of life for those who are in need of improving their knowledge of the fields."),
+              Filter(),
+              Content()
+            ],
           ),
-        ));
+        )));
+  }
+}
+
+class SearchCourse extends StatefulWidget {
+  const SearchCourse({super.key});
+
+  @override
+  State<SearchCourse> createState() => _SearchCourseState();
+}
+
+class _SearchCourseState extends State<SearchCourse> {
+  final TextEditingController _textEditingDate = TextEditingController();
+  bool isEmpty = true;
+
+  void checkTextEmpty(String value) {
+    setState(() {
+      isEmpty = value.isEmpty;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SvgPicture.asset(
+          'img/ScreenCourse.svg',
+          width: 100,
+          height: 100,
+        ),
+        const SizedBox(
+          width: 20,
+        ),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Discover Courses",
+                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 22),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Expanded(
+                      flex: 5,
+                      child: Container(
+                        height: 35,
+                        padding: const EdgeInsets.only(left: 10, right: 0),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.grey,
+                            width: 1.0,
+                          ),
+                          color: Colors.white,
+                        ),
+                        child: TextField(
+                          controller: _textEditingDate,
+                          onChanged: (value) => {checkTextEmpty(value)},
+                          decoration: InputDecoration(
+                              contentPadding:
+                                  const EdgeInsets.only(top: -4, left: 0),
+                              border: InputBorder.none,
+                              hintText: "Course",
+                              hintStyle: const TextStyle(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w400),
+                              suffixIcon: Visibility(
+                                visible: !isEmpty,
+                                child: IconButton(
+                                  icon: const Icon(
+                                    Icons.highlight_remove_outlined,
+                                    color: Colors.black54,
+                                    size: 16,
+                                  ),
+                                  onPressed: () {
+                                    _textEditingDate.text = "";
+                                  },
+                                ),
+                              )),
+                          style: const TextStyle(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w400,
+                              fontSize: 16),
+                        ),
+                      )),
+                  Expanded(
+                      flex: 1,
+                      child: Container(
+                        height: 35,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.grey,
+                            width: 1.0,
+                          ),
+                          color: Colors.white,
+                        ),
+                        child: IconButton(
+                            onPressed: () {},
+                            icon: const Icon(
+                              Icons.search_rounded,
+                              size: 25,
+                              color: Colors.grey,
+                            )),
+                      ))
+                ],
+              )
+            ],
+          ),
+        )
+      ],
+    );
   }
 }

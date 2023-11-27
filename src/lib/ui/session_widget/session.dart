@@ -50,7 +50,7 @@ class _SessionState extends State<Session> {
                     ),
                   ),
                   child: ClipOval(
-                    child: Image.asset('login_bg.png'),
+                    child: Image.asset('img/login_bg.png'),
                   ),
                 ),
                 const SizedBox(
@@ -67,7 +67,7 @@ class _SessionState extends State<Session> {
                     Row(
                       children: [
                         SvgPicture.asset(
-                          'Tunisia.svg',
+                          'img/Vietnam.svg',
                           width: 16,
                           height: 16,
                         ),
@@ -75,7 +75,7 @@ class _SessionState extends State<Session> {
                           width: 3,
                         ),
                         const Text(
-                          "Tunisia",
+                          "Vietnam",
                           style: TextStyle(
                               fontWeight: FontWeight.w400,
                               color: Colors.black54,
@@ -529,7 +529,7 @@ class _SessionState extends State<Session> {
             ),
           ),
           child: ClipOval(
-            child: Image.asset('login_bg.png'),
+            child: Image.asset('img/login_bg.png'),
           ),
         ),
         const Text(

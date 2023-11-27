@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:src/ui/Home/Home.dart';
+import 'package:src/ui/home/home.dart';
 import 'package:src/ui/session_widget/session.dart';
 
-import '../Courses/courses.dart';
+import '../courses/courses_page.dart';
 import '../schedule/schedule_page.dart';
 
 class History extends StatelessWidget {
@@ -184,7 +184,7 @@ class History extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   SvgPicture.asset(
-                    'history.svg',
+                    'img/history.svg',
                   ),
                   const SizedBox(
                     height: 20,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
-import 'package:src/ui/Courses/courses.dart';
-import 'package:src/ui/Home/Home.dart';
+import 'package:src/ui/courses/courses_page.dart';
+import 'package:src/ui/home/home.dart';
 import 'package:src/ui/history/history_page.dart';
 import 'package:src/ui/schedule/schedule_page.dart';
 

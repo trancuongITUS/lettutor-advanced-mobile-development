@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../Home/Home.dart';
+import '../home/home.dart';
 
 class LoginBasic extends StatelessWidget {
   const LoginBasic({super.key});
