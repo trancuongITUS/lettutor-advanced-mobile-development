@@ -1,30 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
+import 'package:src/models/user.dart';
+import 'package:src/ui/auth/signin_page.dart';
 import 'package:src/ui/courses/courses_page.dart';
 import 'package:src/ui/home/home.dart';
 import 'package:src/ui/history/history_page.dart';
 import 'package:src/ui/schedule/schedule_page.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+typedef SignInCallback = void Function(int appState);
+
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-        title: 'LetTutor',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
-          useMaterial3: true,
-        ),
-        debugShowCheckedModeBanner: false,
-        home: const BottomNavBar());
-  }
+  State<MyApp> createState() => _MyAppState();
+
 }
 
+class _MyAppState extends State<MyApp> {
+  final User account = User(email: "", password: "");
+  int appState = 0;
+  void loginCallback(int appState) {
+    setState(() {
+      this.appState = appState;
+    });
+  }
+
+  Widget getWidgetByState() {
+    if (appState == 0) {
+      return SignIn(loginCallback);
+    } else  {
+      return const BottomNavBar();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => account),
+      ],
+      child: MaterialApp(
+          title: 'LetTutor',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+            useMaterial3: true,
+          ),
+          debugShowCheckedModeBanner: false,
+          home: Consumer<User>(
+          builder: (context, account, _) {
+            return getWidgetByState();
+          }
+        )
+      ),
+    );
+  }
+}
 class BottomNavBar extends StatelessWidget {
   const BottomNavBar({super.key});
 
@@ -63,10 +99,7 @@ class BottomNavBar extends StatelessWidget {
       ];
     }
 
-    PersistentTabController controller;
-
-    controller = PersistentTabController(initialIndex: 0);
-
+    PersistentTabController controller = PersistentTabController(initialIndex: 0);
     return PersistentTabView(
       context,
       controller: controller,

@@ -19,6 +19,8 @@ dependencies:
   multiselect: ^0.1.0
   multi_dropdown: ^2.1.0
   get: ^4.6.6
+  provider:
+  toastification:
 
 dev_dependencies:
   flutter_test:
