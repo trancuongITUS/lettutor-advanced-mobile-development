@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_svg: ^0.22.0
+  flutter_svg: ^2.0.9
   expandable_text: ^2.3.0
   appinio_video_player: ^1.2.2
   syncfusion_flutter_pdfviewer: ^23.1.42
@@ -21,6 +21,10 @@ dependencies:
   get: ^4.6.6
   provider:
   toastification:
+  syncfusion_flutter_calendar: ^23.1.44
+  chewie: ^1.7.0
+  video_player:
+  intl: ^0.18.1
 
 dev_dependencies:
   flutter_test:
