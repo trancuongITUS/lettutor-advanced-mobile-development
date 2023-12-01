@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:src/models/tutor.dart';
 import 'package:src/ui/detail_tutor/detail_tutor.dart';
 
 class Tutor extends StatefulWidget {
-  const Tutor({super.key});
+  final TutorModel tutor;
+  const Tutor(this.tutor, {super.key});
 
   @override
   State<Tutor> createState() => _TutorState();
@@ -39,17 +41,34 @@ List<Widget> generateWidgets(List<String> list) {
   return widgets;
 }
 
+List<Widget> generateRatings(int rating) {
+  List<Widget> widgets = [];
+
+  for (int i = 1; i <=5; i++) {
+    if(i<=rating) {
+      widgets.add(const Icon(
+        Icons.star,
+        size: 15,
+        color: Colors.yellow,
+      ));
+    }
+    else{
+      widgets.add(Icon(
+        Icons.star,
+        size: 14,
+        color: Colors.grey.shade300,
+      ));
+    }
+  }
+
+  return widgets;
+}
+
 class _TutorState extends State<Tutor> {
   @override
   Widget build(BuildContext context) {
-    List<String> listFilters = [
-      "English for kids",
-      "English for Business",
-      "Conversational",
-      "STARTERS",
-      "IELTS",
-    ];
-    List<Widget> generatedWidgets = generateWidgets(listFilters);
+    List<Widget> generatedWidgets = generateWidgets(widget.tutor.specialities);
+    
     return Container(
       padding: const EdgeInsets.only(left: 15, top: 15, right: 15, bottom: 15),
       decoration: BoxDecoration(
@@ -93,7 +112,7 @@ class _TutorState extends State<Tutor> {
                         ),
                       ),
                       child: ClipOval(
-                        child: Image.asset('img/login_bg.png'),
+                        child: Image.network(widget.tutor.avatar),
                       ),
                     ),
                   ),
@@ -111,25 +130,25 @@ class _TutorState extends State<Tutor> {
                                 builder: (context) => const DetailTutor()),
                           );
                         },
-                        child: const Text(
-                          "Keegan",
-                          style: TextStyle(
+                        child: Text(
+                          widget.tutor.name,
+                          style: const TextStyle(
                               fontWeight: FontWeight.w500, fontSize: 20),
                         ),
                       ),
                       Row(
                         children: [
                           SvgPicture.asset(
-                            'img/Vietnam.svg',
+                            widget.tutor.avatarCountry,
                             width: 16,
                             height: 16,
                           ),
                           const SizedBox(
                             width: 3,
                           ),
-                          const Text(
-                            "Vietnam",
-                            style: TextStyle(
+                          Text(
+                            widget.tutor.country,
+                            style: const TextStyle(
                                 fontWeight: FontWeight.w400,
                                 color: Colors.black54,
                                 fontSize: 14),
@@ -139,35 +158,9 @@ class _TutorState extends State<Tutor> {
                       const SizedBox(
                         height: 2,
                       ),
-                      const Row(
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.star,
-                            size: 14,
-                            color: Colors.yellow,
-                          ),
-                          Icon(
-                            Icons.star,
-                            size: 14,
-                            color: Colors.yellow,
-                          ),
-                          Icon(
-                            Icons.star,
-                            size: 14,
-                            color: Colors.yellow,
-                          ),
-                          Icon(
-                            Icons.star,
-                            size: 14,
-                            color: Colors.yellow,
-                          ),
-                          Icon(
-                            Icons.star,
-                            size: 14,
-                            color: Colors.yellow,
-                          )
-                        ],
+                        children: generateRatings(widget.tutor.rating)
                       )
                     ],
                   )
@@ -189,10 +182,10 @@ class _TutorState extends State<Tutor> {
           ),
           Container(
             margin: const EdgeInsets.only(top: 10, bottom: 20),
-            child: const Text(
-                "I am passionate about running and fitness, I often compete in trail/mountain running events and I love pushing myself. I am training to one day take part in ultra-endurance events. I also enjoy watching rugby on the weekends, reading and watching podcasts on Youtube. My most memorable life experience would be living in and traveling around Southeast Asia.",
+            child: Text(
+                widget.tutor.description,
                 maxLines: 4,
-                style: TextStyle(fontSize: 12, color: Colors.black54),
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
                 overflow: TextOverflow.ellipsis),
           ),
           Row(

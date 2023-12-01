@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:src/main.dart';
 import 'package:src/ui/history/history_page.dart';
 import 'package:src/ui/session_widget/session.dart';
 
 import '../courses/courses_page.dart';
-import '../home/home.dart';
+import '../home/home_page.dart';
 
 class Schedule extends StatelessWidget {
-  const Schedule({super.key});
+  final SignInCallback signInCallback;
+  const Schedule(this.signInCallback, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +67,7 @@ class Schedule extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const Home()),
+                    MaterialPageRoute(builder: (context) => HomePage(signInCallback)),
                   );
                 },
               ),
@@ -82,7 +84,7 @@ class Schedule extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const Courses()),
+                    MaterialPageRoute(builder: (context) => Courses(signInCallback)),
                   );
                 },
               ),
@@ -99,7 +101,7 @@ class Schedule extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const Schedule()),
+                    MaterialPageRoute(builder: (context) => Schedule(signInCallback)),
                   );
                 },
               ),
@@ -116,7 +118,7 @@ class Schedule extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const History()),
+                    MaterialPageRoute(builder: (context) => History(signInCallback)),
                   );
                 },
               ),

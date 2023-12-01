@@ -1,8 +1,18 @@
-import 'package:flutter/cupertino.dart';
-import 'package:src/ui/home/tutor.dart';
+import 'package:flutter/material.dart';
 
-class ListTutors extends StatelessWidget {
-  const ListTutors({super.key});
+import 'package:src/ui/home/tutor.dart';
+import 'package:src/models/tutor.dart';
+
+class ListTutors extends StatefulWidget {
+  final List<TutorModel> tutors;
+
+  const ListTutors(this.tutors, {super.key});
+
+  @override
+  State<ListTutors> createState() => _ListTutorsState();
+}
+
+class _ListTutorsState extends State<ListTutors> {
 
   @override
   Widget build(BuildContext context) {
@@ -21,10 +31,10 @@ class ListTutors extends StatelessWidget {
             ),
             textAlign: TextAlign.left,
           ),
-          ListView(
+          ListView.builder (
             physics: const NeverScrollableScrollPhysics(),
             shrinkWrap: true,
-            children: const [Tutor(), Tutor(), Tutor()],
+            itemBuilder: (BuildContext context, int index) { return Tutor(widget.tutors[index]); },
           ),
         ],
       ),

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:src/main.dart';
+import 'package:src/models/tutor.dart';
+
 import 'package:src/ui/courses/courses_page.dart';
 import 'package:src/ui/home/list_tutors.dart';
 import 'package:src/ui/home/search_tutor.dart';
@@ -7,11 +11,80 @@ import 'package:src/ui/history/history_page.dart';
 import 'package:src/ui/schedule/schedule_page.dart';
 import 'package:src/ui/video_call/video_call_page.dart';
 
-class Home extends StatelessWidget {
-  const Home({super.key});
+typedef FilterCallback = void Function(String filter);
+typedef FilterNationCallback = void Function(List<String> name);
+
+class HomePage extends StatefulWidget {
+  final SignInCallback signInCallback;
+  const HomePage(this.signInCallback, {super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+
+  List<TutorModel> tutorsResult = [];
+  List<TutorModel> tutors = [];
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration.zero, () {
+      filterCallback("All");
+    });
+  }
+
+  void filterCallback(String filter) {
+    if (filter == "All") {
+      setState(() {
+        tutorsResult = tutors;
+      });
+    } else {
+      setState(() {
+        tutorsResult = tutors
+            .where((tutor) => tutor.specialities.contains(filter))
+            .toList();
+      });
+    }
+  }
+
+  void filterByNationCallback(List<String> nation) {
+    List<TutorModel> temp=[];
+    if(nation.isNotEmpty) {
+      for (var element in nation) {
+        if ("Foreign Tutor" == element) {
+          temp = temp + tutors
+            .where((tutor) => !tutor.country.contains("US") && !tutor.country.contains("England") && !tutor.country.contains("Vietnam"))
+            .toList();
+        } else if ("Vietnamese Tutor" == element) {
+          temp = temp + tutors
+            .where((tutor) => tutor.country.contains("Vietnam"))
+            .toList();
+        } else if (element=="Native English Tutor") {
+          temp = temp + tutors
+            .where((tutor) => tutor.country.contains("US") || tutor.country.contains("England"))
+            .toList();
+        }
+      }
+      setState(() {
+        tutorsResult = temp;
+      });
+    }
+  }
+
+  void filterByNameCallback(String name) {
+      setState(() {
+        tutorsResult = tutors
+          .where((tutor) => tutor.name.toLowerCase().contains(name.toLowerCase()))
+          .toList();
+      }
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    tutors = context.watch<List<TutorModel>>();
     return Scaffold(
       endDrawer: Drawer(
         child: ListView(
@@ -66,7 +139,7 @@ class Home extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const Home()),
+                  MaterialPageRoute(builder: (context) => HomePage(widget.signInCallback)),
                 );
               },
             ),
@@ -83,7 +156,7 @@ class Home extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const Courses()),
+                  MaterialPageRoute(builder: (context) => Courses(widget.signInCallback)),
                 );
               },
             ),
@@ -100,7 +173,7 @@ class Home extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const Schedule()),
+                  MaterialPageRoute(builder: (context) => Schedule(widget.signInCallback)),
                 );
               },
             ),
@@ -117,7 +190,7 @@ class Home extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const History()),
+                  MaterialPageRoute(builder: (context) => History(widget.signInCallback)),
                 );
               },
             ),
@@ -176,18 +249,18 @@ class Home extends StatelessWidget {
               )),
         ),
       ),
-      body: const SingleChildScrollView(
+      body: SingleChildScrollView(
           child: Column(children: [
-        UpcomingLesson(),
-        SearchTutor(),
-        Divider(
+        const UpcomingLesson(),
+        SearchTutor(filterCallback, filterByNameCallback, filterByNationCallback),
+        const Divider(
           color: Colors.grey,
           height: 10,
           thickness: 0.5,
           indent: 20,
           endIndent: 10,
         ),
-        ListTutors(),
+        ListTutors(tutorsResult),
       ])),
     );
   }

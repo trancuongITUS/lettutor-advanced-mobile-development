@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-class User extends ChangeNotifier {
+class UserModel extends ChangeNotifier {
   String? email;
   String? password;
 
   bool isAuth = false;
 
-  User({
+  UserModel({
     required this.email,
     required this.password
   });

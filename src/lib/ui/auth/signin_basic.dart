@@ -23,7 +23,7 @@ class _SignInBasicState extends State<SignInBasic> {
 
   @override
   Widget build(BuildContext context) {
-    User user = context.watch<User>();
+    UserModel user = context.watch<UserModel>();
     return Container(
       margin: const EdgeInsets.only(top: 30),
       child: Column(

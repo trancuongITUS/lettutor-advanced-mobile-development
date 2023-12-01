@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:src/ui/home/home.dart';
+import 'package:src/main.dart';
+import 'package:src/ui/home/home_page.dart';
 import 'package:src/ui/session_widget/session.dart';
 
 import '../courses/courses_page.dart';
 import '../schedule/schedule_page.dart';
 
 class History extends StatelessWidget {
-  const History({super.key});
+  final SignInCallback signInCallback;
+  const History(this.signInCallback, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +68,7 @@ class History extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const Home()),
+                    MaterialPageRoute(builder: (context) => HomePage(signInCallback)),
                   );
                 },
               ),
@@ -83,7 +85,7 @@ class History extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const Courses()),
+                    MaterialPageRoute(builder: (context) => Courses(signInCallback)),
                   );
                 },
               ),
@@ -100,7 +102,7 @@ class History extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const Schedule()),
+                    MaterialPageRoute(builder: (context) => Schedule(signInCallback)),
                   );
                 },
               ),
@@ -117,7 +119,7 @@ class History extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const History()),
+                    MaterialPageRoute(builder: (context) => History(signInCallback)),
                   );
                 },
               ),
