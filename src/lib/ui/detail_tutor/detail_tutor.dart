@@ -4,6 +4,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:src/models/tutor.dart';
+import 'package:src/repository/favorite_repository.dart';
+import 'package:src/ui/booking/booking.dart';
 import 'package:src/ui/detail_tutor/info_detail.dart';
 import 'package:src/ui/detail_tutor/list_reviews.dart';
 import 'package:src/ui/detail_tutor/video_intro.dart';
@@ -19,10 +21,10 @@ class DetailTutor extends StatefulWidget {
 class _DetailTutorState extends State<DetailTutor> {
   bool isFavorite = false;
   List<Widget> generateRatings(double rating) {
-    int realRating=rating.toInt();
+    int realRating = rating.toInt();
     List<Widget> widgets = [];
 
-    for (int i = 1; i <=5; i++) {
+    for (int i = 1; i <= 5; ++i) {
       if (i <= realRating) {
         widgets.add(const Icon(
           Icons.star,
@@ -204,12 +206,12 @@ class _DetailTutorState extends State<DetailTutor> {
             ),
             const SizedBox(height: 20),
             ChewieDemo(linkVideo: widget.tutor.video,),
-            const VideoIntro(),
-            const InfoDetail(widget.tutor),
+            ChewieDemo(linkVideo: widget.tutor.video,),
+            InfoDetail(widget.tutor),
             const SizedBox(height: 20),
-            const ListReview(widget.tutor.feedbacks),
-            SizedBox(height: 20),
-            Booking()
+            ListReview(widget.tutor.feedbacks),
+            const SizedBox(height: 20),
+            const Booking()
           ]))));
   }
 }

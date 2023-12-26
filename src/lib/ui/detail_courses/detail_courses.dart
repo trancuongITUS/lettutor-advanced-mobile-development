@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:src/models/course.dart';
 import 'package:src/ui/courses/course.dart';
 import 'package:src/ui/detail_courses/overview.dart';
 
 class DetailCourse extends StatefulWidget {
-  const DetailCourse({super.key});
+  final CourseModel course;
+  const DetailCourse({super.key, required this.course});
 
   @override
   State<DetailCourse> createState() => _DetailCourseState();
@@ -56,21 +58,16 @@ class _DetailCourseState extends State<DetailCourse> {
             child: Container(
                 padding: const EdgeInsets.only(
                     left: 20, right: 20, bottom: 20, top: 10),
-                child: const Column(
+                child: Column(
                   children: [
                     Course(
                       type: "DetailCourse",
-                      image: "img/course_img.png",
-                      title: "Life in the Internet Age",
-                      description:
-                          "Let's discuss how technology is changing the way we live",
-                      level: "",
-                      numberLesson: "",
+                      course: widget.course,
                     ),
-                    SizedBox(
+                    const SizedBox(
                       height: 30,
                     ),
-                    Overview()
+                    Overview(course: widget.course)
                   ],
                 ))));
   }

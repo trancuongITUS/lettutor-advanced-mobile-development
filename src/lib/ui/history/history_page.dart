@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:provider/provider.dart';
 import 'package:src/main.dart';
+import 'package:src/repository/schedule_student_repository.dart';
 import 'package:src/ui/home/home_page.dart';
 import 'package:src/ui/session_widget/session.dart';
 
@@ -14,6 +16,7 @@ class History extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ScheduleStudentRepository scheduleStudentRepository = context.watch<ScheduleStudentRepository>();
     return Scaffold(
         endDrawer: Drawer(
           child: ListView(
@@ -85,7 +88,7 @@ class History extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => Courses(signInCallback)),
+                    MaterialPageRoute(builder: (context) => CoursesPage(signInCallback)),
                   );
                 },
               ),
@@ -223,15 +226,8 @@ class History extends StatelessWidget {
                   ListView(
                     physics: const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
-                    children: const [
-                      Session(
-                        typeSession: "History",
-                        timeOrNumber: "6 hours ago",
-                      ),
-                      Session(
-                        typeSession: "History",
-                        timeOrNumber: "6 hours ago",
-                      ),
+                    children: [
+                      // Session(typeSession: "History", schedule: scheduleStudentRepository.scheduleStudent[0]),
                     ],
                   ),
                 ]),

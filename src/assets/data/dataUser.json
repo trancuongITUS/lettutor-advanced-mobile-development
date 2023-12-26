@@ -1,0 +1,69 @@
+{
+    "user": {
+        "id": "cb9e7deb-3382-48db-b07c-90acf52f541c",
+        "email": "phhai@ymail.com",
+        "name": "Hồ Duy Bảo",
+        "avatar": "https://sandbox.api.lettutor.com/avatar/cb9e7deb-3382-48db-b07c-90acf52f541cavatar1686550060378.jpg",
+        "country": "VN",
+        "phone": "842499996508",
+        "roles": [
+            "student",
+            "CHANGE_PASSWORD"
+        ],
+        "language": null,
+        "birthday": "1999-06-01 00:00:00.000",
+        "isActivated": true,
+        "tutorInfo": {
+            "id": "36f7fdc3-39a7-48a4-9ac8-93a12c8e5f6f",
+            "video": "https://sandbox.api.lettutor.com/undefined/undefined",
+            "bio": "I am a teacher",
+            "education": "MBS",
+            "experience": "15 years of teaching",
+            "profession": "Lecturer",
+            "accent": null,
+            "targetStudent": "Advanced",
+            "interests": "ABC",
+            "languages": "English, Việt Nam",
+            "specialties": "english-for-kids,business-english",
+            "resume": null,
+            "rating": 2.142857142857143,
+            "isActivated": false,
+            "isNative": false,
+            "youtubeVideoId": null
+        },
+        "walletInfo": {
+            "amount": "984200000",
+            "isBlocked": false,
+            "bonus": 0
+        },
+        "requireNote": "thich hoc",
+        "level": "INTERMEDIATE",
+        "learnTopics": [
+            {
+            "id": 3,
+            "key": "english-for-kids",
+            "name": "English for Kids"
+            }
+        ],
+        "testPreparations": [
+            {
+            "id": 2,
+            "key": "movers",
+            "name": "MOVERS"
+            }
+        ],
+        "isPhoneActivated": true,
+        "timezone": 7,
+        "referralInfo": {
+            "referralCode": "WJDRSTWNES",
+            "referralPackInfo": {
+            "earnPercent": 5
+            }
+        },
+        "studySchedule": "",
+        "canSendMessage": false,
+        "studentGroup": null,
+        "studentInfo": null,
+        "avgRating": 2.142857142857143
+    }
+}

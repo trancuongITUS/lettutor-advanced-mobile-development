@@ -6,10 +6,8 @@ import 'package:src/ui/home/time_range.dart';
 
 class SearchTutor extends StatefulWidget {
   final FilterCallback filterCallback;
-  final FilterCallback filterByNameCallback;
-  final FilterNationCallback filterByNationCallback;
 
-  const SearchTutor(this.filterCallback, this.filterByNameCallback, this.filterByNationCallback, {super.key});
+  const SearchTutor(this.filterCallback, {super.key});
 
   @override
   State<SearchTutor> createState() => _SearchTutorState();
@@ -18,6 +16,7 @@ class SearchTutor extends StatefulWidget {
 class _SearchTutorState extends State<SearchTutor> {
   DateTime selectDate = DateTime.now();
   final TextEditingController _textEditingDate = TextEditingController();
+  final TextEditingController _textName = TextEditingController();
   final List<String> _items = [
     "Foreign Tutor",
     "Vietnamese Tutor",
@@ -31,7 +30,7 @@ class _SearchTutorState extends State<SearchTutor> {
   Widget build(BuildContext context) {
     List<String> listFilters = [
       "All",
-      "English for kids",
+      "English for Kids",
       "English for Business",
       "Conversational",
       "STARTERS",
@@ -74,7 +73,7 @@ class _SearchTutorState extends State<SearchTutor> {
             ),
             child: TextField(
               onSubmitted: (value) {
-                widget.filterByNameCallback(value);
+                widget.filterCallback(selectedButton, value, selectedOptionList);
               },
               decoration: const InputDecoration(
                   contentPadding: EdgeInsets.only(top: -12, left: 5, right: 2),
@@ -109,7 +108,7 @@ class _SearchTutorState extends State<SearchTutor> {
               onChanged: (value) {
                 selectedOptionList = value;
                 if(selectedOptionList.isNotEmpty) {
-                  widget.filterByNationCallback(value);
+                  widget.filterCallback(selectedButton, _textName.text, value);
                 }
                 selectedOption.value = "";
                 for (var element in selectedOptionList) {
@@ -187,27 +186,29 @@ class _SearchTutorState extends State<SearchTutor> {
             child: Wrap(
               spacing: 6,
               runSpacing: -5,
-              children: List.generate(listFilters.length, (index) => TextButton(
-                onPressed: () {
-                  setState(() {
-                    selectedButton = listFilters[index];
-                  });
-                  widget.filterCallback(listFilters[index]);
-                },
-                style: ButtonStyle(
-                  minimumSize: MaterialStateProperty.all(const Size(40, 30)),
-                  padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 10, vertical: 5)),
-                  backgroundColor: selectedButton == listFilters[index] ? MaterialStateProperty.all<Color>(Colors.blue.shade100) : MaterialStateProperty.all<Color>(const Color.fromRGBO(228, 230, 235, 1)),
-                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)))
-                ),
-                child: Text(
-                  listFilters[index],
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: selectedButton == listFilters[index] ? Colors.blue.shade800 : const Color.fromARGB(100, 100, 100, 1)
+              children: List.generate(
+                listFilters.length,
+                (index) => TextButton(
+                  onPressed: () {
+                    setState(() {
+                      selectedButton = listFilters[index];
+                    });
+                    widget.filterCallback(listFilters[index], _textName.text, selectedOptionList);
+                  },
+                  style: ButtonStyle(
+                    minimumSize: MaterialStateProperty.all(const Size(40, 30)),
+                    padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 10, vertical: 5)),
+                    backgroundColor: selectedButton == listFilters[index] ? MaterialStateProperty.all<Color>(Colors.blue.shade100) : MaterialStateProperty.all<Color>(const Color.fromRGBO(228, 230, 235, 1)),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)))
                   ),
-                ),
+                  child: Text(
+                    listFilters[index],
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: selectedButton == listFilters[index] ? Colors.blue.shade800 : const Color.fromARGB(100, 100, 100, 1)
+                    ),
+                  ),
               )),
             ),
           ),

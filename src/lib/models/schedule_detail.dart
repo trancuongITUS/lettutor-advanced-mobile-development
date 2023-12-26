@@ -1,3 +1,5 @@
+import 'package:src/models/booking_info.dart';
+
 class ScheduleDetailModel {
   final int startPeriodTimestamp;
   final int endPeriodTimestamp;
@@ -7,7 +9,7 @@ class ScheduleDetailModel {
   final String endPeriod;
   final String createdAt;
   final String updatedAt;
-  final List<dynamic> bookingInfo;
+  final List<BookingInfoModel> bookingInfo;
   final bool isBooked;
 
   ScheduleDetailModel({
@@ -24,6 +26,11 @@ class ScheduleDetailModel {
   });
 
   factory ScheduleDetailModel.fromJson(Map<String, dynamic> json) {
+    List<BookingInfoModel> bookingInfos = [];
+    if (json['bookingInfo'] != null) {
+      bookingInfos = (json['bookingInfo'] as List).map((bookingInfo) => BookingInfoModel.fromJson(bookingInfo)).toList();
+    }
+
     return ScheduleDetailModel(
       startPeriodTimestamp: json['startPeriodTimestamp'] as int,
       endPeriodTimestamp: json['endPeriodTimestamp'] as int,
@@ -33,7 +40,7 @@ class ScheduleDetailModel {
       endPeriod: json['endPeriod'] as String,
       createdAt: json['createdAt'] as String,
       updatedAt: json['updatedAt'] as String,
-      bookingInfo: json['bookingInfo'] as List<dynamic>,
+      bookingInfo: bookingInfos,
       isBooked: json['isBooked'] as bool,
     );
   }

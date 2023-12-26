@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import 'package:src/models/tutor.dart';
+import 'package:src/repository/favorite_repository.dart';
 import 'package:src/ui/detail_tutor/detail_tutor.dart';
 
 class Tutor extends StatefulWidget {
@@ -42,10 +44,11 @@ List<Widget> generateWidgets(List<String> list) {
 }
 
 List<Widget> generateRatings(int rating) {
+  int realRating = rating.round();
   List<Widget> widgets = [];
 
   for (int i = 1; i <=5; i++) {
-    if(i<=rating) {
+    if(i <= realRating) {
       widgets.add(const Icon(
         Icons.star,
         size: 15,
@@ -55,7 +58,7 @@ List<Widget> generateRatings(int rating) {
     else{
       widgets.add(Icon(
         Icons.star,
-        size: 14,
+        size: 15,
         color: Colors.grey.shade300,
       ));
     }
@@ -67,7 +70,9 @@ List<Widget> generateRatings(int rating) {
 class _TutorState extends State<Tutor> {
   @override
   Widget build(BuildContext context) {
-    List<Widget> generatedWidgets = generateWidgets(widget.tutor.specialities);
+    FavouriteRepository favouriteRepository = context.watch<FavouriteRepository>();
+    var isInFavourite = favouriteRepository.itemIds.contains(widget.tutor.userId);
+    List<Widget> generatedWidgets = generateWidgets(widget.tutor.specialties);
     
     return Container(
       padding: const EdgeInsets.only(left: 15, top: 15, right: 15, bottom: 15),
@@ -98,7 +103,7 @@ class _TutorState extends State<Tutor> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const DetailTutor()),
+                            builder: (context) => DetailTutor(widget.tutor)),
                       );
                     },
                     child: Container(
@@ -112,7 +117,7 @@ class _TutorState extends State<Tutor> {
                         ),
                       ),
                       child: ClipOval(
-                        child: Image.network(widget.tutor.avatar),
+                        child: Image.network(widget.tutor.avatar ?? "https://api.app.lettutor.com/avatar/e9e3eeaa-a588-47c4-b4d1-ecfa190f63faavatar1632109929661.jpg"),
                       ),
                     ),
                   ),
@@ -127,7 +132,7 @@ class _TutorState extends State<Tutor> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const DetailTutor()),
+                                builder: (context) => DetailTutor(widget.tutor)),
                           );
                         },
                         child: Text(
@@ -138,8 +143,9 @@ class _TutorState extends State<Tutor> {
                       ),
                       Row(
                         children: [
-                          SvgPicture.asset(
-                            widget.tutor.avatarCountry,
+                          SvgPicture.network(
+                            widget.tutor.country != null
+                              ? "https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.4.3/flags/4x3/${widget.tutor.country.toString().toLowerCase()}.svg" : "https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.4.3/flags/4x3/ph.svg",
                             width: 16,
                             height: 16,
                           ),
@@ -147,7 +153,7 @@ class _TutorState extends State<Tutor> {
                             width: 3,
                           ),
                           Text(
-                            widget.tutor.country,
+                            widget.tutor.country ?? "Philippines",
                             style: const TextStyle(
                                 fontWeight: FontWeight.w400,
                                 color: Colors.black54,
@@ -160,15 +166,20 @@ class _TutorState extends State<Tutor> {
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
-                        children: generateRatings(widget.tutor.rating)
+                        children:generateRatings(widget.tutor.rating ?? 0.0)
                       )
                     ],
                   )
                 ],
               ),
-              const Icon(
-                Icons.favorite_border,
-                color: Colors.blueAccent,
+              IconButton(
+                icon: Icon(
+                  isInFavourite ? Icons.favorite : Icons.favorite_border,
+                  color: isInFavourite ? Colors.red : Colors.blueAccent,
+                ),
+                onPressed: () {
+                  isInFavourite ? favouriteRepository.remove(widget.tutor.userId) : favouriteRepository.add(widget.tutor.userId);
+                },
               )
             ],
           ),
@@ -183,7 +194,7 @@ class _TutorState extends State<Tutor> {
           Container(
             margin: const EdgeInsets.only(top: 10, bottom: 20),
             child: Text(
-                widget.tutor.description,
+                widget.tutor.bio,
                 maxLines: 4,
                 style: const TextStyle(fontSize: 12, color: Colors.black54),
                 overflow: TextOverflow.ellipsis),

@@ -1,33 +1,33 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:src/models/tutor.dart';
 import 'package:src/ui/detail_courses/detail_courses.dart';
 
 class InfoDetail extends StatelessWidget {
-  const InfoDetail({super.key});
+  final TutorModel tutor;
+  const InfoDetail(this.tutor, {super.key});
+
   @override
   Widget build(BuildContext context) {
-    List<String> listSpecialties = [
-      "English for Business",
-      "Conversational",
-      "English for kids",
-      "IELTS",
-      "STARTERS"
-    ];
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Education",
-              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 18)),
+          const Text(
+            "Education",
+            style: TextStyle(fontWeight: FontWeight.w500, fontSize: 18)
+          ),
           const SizedBox(
             height: 10,
           ),
           Container(
             padding: const EdgeInsets.only(left: 10),
-            child: Text("BA",
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
+            child: Text(
+                tutor.education,
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 16)
+              ),
           ),
           const SizedBox(
             height: 20,
@@ -43,7 +43,7 @@ class InfoDetail extends StatelessWidget {
             decoration: BoxDecoration(
                 color: Colors.blue.shade100,
                 borderRadius: BorderRadius.circular(20)),
-            child: Text("English",
+            child: Text(tutor.languages,
                 style: TextStyle(color: Colors.blue.shade800, fontSize: 16)),
           ),
           const SizedBox(
@@ -59,7 +59,7 @@ class InfoDetail extends StatelessWidget {
             child: Wrap(
                 spacing: 10,
                 runSpacing: 10,
-                children: generateWidgets(listSpecialties)),
+                children: generateWidgets(tutor.specialties)),
           ),
           const SizedBox(
             height: 20,
@@ -75,7 +75,7 @@ class InfoDetail extends StatelessWidget {
               text: TextSpan(
                 text: 'Basic Conversation Topics: ',
                 style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.w500,
                     color: Colors.black),
                 children: [
@@ -85,11 +85,11 @@ class InfoDetail extends StatelessWidget {
                           color: Colors.blue, fontWeight: FontWeight.normal),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const DetailCourse()),
-                          );
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //       builder: (context) => const DetailCourse()),
+                          // );
                         }),
                 ],
               ),
@@ -104,7 +104,7 @@ class InfoDetail extends StatelessWidget {
               text: TextSpan(
                 text: 'Life in the Internet Age: ',
                 style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.w500,
                     color: Colors.black),
                 children: [
@@ -114,11 +114,11 @@ class InfoDetail extends StatelessWidget {
                           color: Colors.blue, fontWeight: FontWeight.normal),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const DetailCourse()),
-                          );
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //       builder: (context) => const DetailCourse()),
+                          // );
                         }),
                 ],
               ),
@@ -135,7 +135,7 @@ class InfoDetail extends StatelessWidget {
           Container(
             padding: const EdgeInsets.only(left: 10),
             child: Text(
-                "I loved the weather, the scenery and the laid-back lifestyle of the locals.",
+                tutor.interests,
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
           ),
           const SizedBox(
@@ -149,7 +149,7 @@ class InfoDetail extends StatelessWidget {
           Container(
             padding: const EdgeInsets.only(left: 10),
             child: Text(
-                "I have more than 10 years of teaching english experience.",
+                tutor.experience,
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
           ),
         ],

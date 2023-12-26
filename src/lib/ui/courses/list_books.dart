@@ -24,6 +24,7 @@ class _ListBookState extends State<ListBook> {
           physics: const NeverScrollableScrollPhysics(),
           shrinkWrap: true,
           children: const [
+            /*
             Course(
               type: "Book",
               image: "img/book.png",
@@ -51,6 +52,7 @@ class _ListBookState extends State<ListBook> {
               level: "Beginner",
               numberLesson: "",
             ),
+            */
           ]),
     );
   }

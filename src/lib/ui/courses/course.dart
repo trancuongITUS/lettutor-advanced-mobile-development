@@ -1,23 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:src/models/course.dart';
 import 'package:src/ui/detail_courses/detail_courses.dart';
 import 'package:src/ui/detail_lesson/detail_lesson.dart';
 
 class Course extends StatefulWidget {
+  final CourseModel course;
   final String type;
-  final String image;
-  final String title;
-  final String description;
-  final String level;
-  final String numberLesson;
 
   const Course(
       {super.key,
       required this.type,
-      required this.image,
-      required this.title,
-      required this.description,
-      required this.level,
-      required this.numberLesson});
+      required this.course});
 
   @override
   State<Course> createState() => _CourseState();
@@ -31,7 +24,7 @@ class _CourseState extends State<Course> {
         if (widget.type == "Course") {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const DetailCourse()),
+            MaterialPageRoute(builder: (context) => DetailCourse(course: widget.course)),
           );
         }
       },
@@ -60,7 +53,7 @@ class _CourseState extends State<Course> {
                   fit: BoxFit.fill,
                   child: ClipRRect(
                       borderRadius: BorderRadius.circular(30),
-                      child: Image.asset(widget.image))),
+                      child: Image.network(widget.course.imageUrl))),
             ),
             const SizedBox(
               height: 5,
@@ -72,7 +65,7 @@ class _CourseState extends State<Course> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.title,
+                    widget.course.name,
                     style: const TextStyle(
                         fontWeight: FontWeight.w500, fontSize: 20),
                   ),
@@ -80,7 +73,7 @@ class _CourseState extends State<Course> {
                     height: 5,
                   ),
                   Text(
-                    widget.description,
+                    widget.course.description,
                     style: const TextStyle(color: Colors.grey),
                   ),
                   const SizedBox(
@@ -110,11 +103,11 @@ class _CourseState extends State<Course> {
                         )
                       : Row(
                           children: [
-                            Text(widget.level),
+                            Text(widget.course.level),
                             Visibility(
-                                visible: widget.type == "Course",
+                                visible: "Course" == widget.type,
                                 child:
-                                    Text(" - ${widget.numberLesson} Lessons"))
+                                    Text(" - ${widget.course.topics.length.toString()} Lessons"))
                           ],
                         )
                 ],

@@ -31,8 +31,7 @@ class ScheduleModel extends ChangeNotifier {
   factory ScheduleModel.fromJson(Map<String, dynamic> json) {
     List<ScheduleDetailModel> scheduleDetails = [];
     if (json['scheduleDetails'] != null) {
-      scheduleDetails = List<ScheduleDetailModel>.from(json['scheduleDetails'].map(
-        (schedule) => ScheduleDetailModel.fromJson(schedule as Map<String, dynamic>)));
+      scheduleDetails = (json['scheduleDetails'] as List).map((scheduleDetail) => ScheduleDetailModel.fromJson(scheduleDetail)).toList();
     }
 
     return ScheduleModel(
