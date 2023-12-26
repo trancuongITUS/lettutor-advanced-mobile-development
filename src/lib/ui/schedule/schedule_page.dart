@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:src/main.dart';
+import 'package:src/provider/authentication_provider.dart';
 import 'package:src/repository/schedule_student_repository.dart';
 import 'package:src/ui/history/history_page.dart';
 import 'package:src/ui/session_widget/session.dart';
@@ -10,8 +10,7 @@ import '../courses/courses_page.dart';
 import '../home/home_page.dart';
 
 class Schedule extends StatelessWidget {
-  final SignInCallback signInCallback;
-  const Schedule(this.signInCallback, {super.key});
+  const Schedule({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +69,7 @@ class Schedule extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => HomePage(signInCallback)),
+                    MaterialPageRoute(builder: (context) => const HomePage()),
                   );
                 },
               ),
@@ -87,7 +86,7 @@ class Schedule extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => CoursesPage(signInCallback)),
+                    MaterialPageRoute(builder: (context) => const CoursesPage()),
                   );
                 },
               ),
@@ -104,7 +103,7 @@ class Schedule extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => Schedule(signInCallback)),
+                    MaterialPageRoute(builder: (context) => const Schedule()),
                   );
                 },
               ),
@@ -121,7 +120,7 @@ class Schedule extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => History(signInCallback)),
+                    MaterialPageRoute(builder: (context) => const History()),
                   );
                 },
               ),
@@ -135,7 +134,8 @@ class Schedule extends StatelessWidget {
                     style:
                         TextStyle(fontWeight: FontWeight.w500, fontSize: 17)),
                 onTap: () {
-                  signInCallback(0);
+                  var authenticationProvider = Provider.of<AuthenticationProvider>(context, listen: false);
+                  authenticationProvider.clearUserInfo();
                 },
               ),
             ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:src/models/user.dart';
+import 'package:src/provider/authentication_provider.dart';
 
 class SignUpBasic extends StatefulWidget {
   const SignUpBasic({super.key});
@@ -19,7 +20,6 @@ class _SignUpBasicState extends State<SignUpBasic> {
 
   @override
   Widget build(BuildContext context) {
-    UserModel user = context.watch<UserModel>();
     return Container(
       margin: const EdgeInsets.only(top: 30),
       child: Column(
@@ -146,10 +146,26 @@ class _SignUpBasicState extends State<SignUpBasic> {
             width: double.infinity,
             margin: const EdgeInsets.only(top: 20),
             child: TextButton(
-                onPressed: () {
-                  if (emailController.text != "" && requiredEmail && passwordController.text != "") {
-                    user.register(emailController.text, passwordController.text);
-                    Navigator.pop(context, true);
+                onPressed: () async {
+                  if (emailController.text.isNotEmpty && requiredEmail && passwordController.text.isNotEmpty) {
+                    var authenticationProvider = Provider.of<AuthenticationProvider>(context, listen: false);
+                    try {
+                      await authenticationProvider.authenticationAPI.signUpByAccount(
+                        email: emailController.text,
+                        password: passwordController.text,
+                        onSuccess: () {
+                          Navigator.pop(context, true);
+                        },
+                        onFail: (String error) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error: ${error.toString()}'))
+                          );
+                        }
+                      );
+                    // ignore: empty_catches
+                    } catch (err) {
+                      
+                    }
                   }
                 },
                 style: ButtonStyle(

@@ -1,7 +1,8 @@
 import 'package:babstrap_settings_screen/babstrap_settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:src/main.dart';
+import 'package:provider/provider.dart';
+import 'package:src/provider/authentication_provider.dart';
 import 'package:src/ui/courses/courses_page.dart';
 import 'package:src/ui/history/history_page.dart';
 import 'package:src/ui/home/home_page.dart';
@@ -9,8 +10,7 @@ import 'package:src/ui/profiles/profile_page.dart';
 import 'package:src/ui/schedule/schedule_page.dart';
 
 class SettingPage extends StatefulWidget {
-  const SettingPage(this.signinCallback,{super.key});
-  final SignInCallback signinCallback;
+  const SettingPage({super.key});
 
   @override
   State<SettingPage> createState() => _SettingPageState();
@@ -76,7 +76,7 @@ class _SettingPageState extends State<SettingPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => HomePage(widget.signinCallback)),
+                      builder: (context) => const HomePage()),
                 );
               },
             ),
@@ -94,7 +94,7 @@ class _SettingPageState extends State<SettingPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => CoursesPage(widget.signinCallback)),
+                      builder: (context) => const CoursesPage()),
                 );
               },
             ),
@@ -112,7 +112,7 @@ class _SettingPageState extends State<SettingPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => Schedule(widget.signinCallback)),
+                      builder: (context) => const Schedule()),
                 );
               },
             ),
@@ -130,7 +130,7 @@ class _SettingPageState extends State<SettingPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => History(widget.signinCallback)),
+                      builder: (context) => const History()),
                 );
               },
             ),
@@ -143,7 +143,8 @@ class _SettingPageState extends State<SettingPage> {
               title: const Text('Logout',
                   style: TextStyle(fontWeight: FontWeight.w500, fontSize: 17)),
               onTap: () {
-                widget.signinCallback(0);
+                var authenticationProvider = Provider.of<AuthenticationProvider>(context, listen: false);
+                authenticationProvider.clearUserInfo();
               },
             ),
           ],
@@ -329,7 +330,8 @@ class _SettingPageState extends State<SettingPage> {
                         duration: Duration(seconds: 2),
                       ),
                     );
-                    widget.signinCallback(0);
+                    var authenticationProvider = Provider.of<AuthenticationProvider>(context, listen: false);
+                    authenticationProvider.clearUserInfo();
                   },
                   icons: Icons.logout,
                   iconStyle: IconStyle(

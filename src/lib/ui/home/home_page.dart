@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:src/main.dart';
 import 'package:src/models/schedule.dart';
 import 'package:src/models/tutor.dart';
+import 'package:src/provider/authentication_provider.dart';
 import 'package:src/repository/schedule_student_repository.dart';
 
 import 'package:src/ui/courses/courses_page.dart';
@@ -19,8 +19,7 @@ import 'package:src/ui/video_call/video_call_page.dart';
 typedef FilterCallback = void Function(String filter, String nameTutor, List<String> nations);
 
 class HomePage extends StatefulWidget {
-  final SignInCallback signInCallback;
-  const HomePage(this.signInCallback, {super.key});
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -164,7 +163,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => HomePage(widget.signInCallback)),
+                  MaterialPageRoute(builder: (context) => const HomePage()),
                 );
               },
             ),
@@ -181,7 +180,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => CoursesPage(widget.signInCallback)),
+                  MaterialPageRoute(builder: (context) => const CoursesPage()),
                 );
               },
             ),
@@ -198,7 +197,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => Schedule(widget.signInCallback)),
+                  MaterialPageRoute(builder: (context) => const Schedule()),
                 );
               },
             ),
@@ -215,7 +214,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => History(widget.signInCallback)),
+                  MaterialPageRoute(builder: (context) => const History()),
                 );
               },
             ),
@@ -227,7 +226,10 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
               ),
               title: const Text('Logout',
                   style: TextStyle(fontWeight: FontWeight.w500, fontSize: 17)),
-              onTap: () {},
+              onTap: () {
+                var authenticationProvider = Provider.of<AuthenticationProvider>(context, listen: false);
+                authenticationProvider.clearUserInfo();
+              },
             ),
           ],
         ),

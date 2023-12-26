@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:src/main.dart';
+import 'package:provider/provider.dart';
+import 'package:src/provider/authentication_provider.dart';
 import 'package:src/ui/courses/filter.dart';
 import 'package:src/ui/home/home_page.dart';
 import 'package:src/ui/history/history_page.dart';
@@ -10,8 +11,7 @@ import '../schedule/schedule_page.dart';
 import 'content.dart';
 
 class CoursesPage extends StatefulWidget {
-  final SignInCallback signInCallback;
-  const CoursesPage(this.signInCallback, {super.key});
+  const CoursesPage({super.key});
 
   @override
   State<CoursesPage> createState() => _CoursesPageState();
@@ -74,7 +74,7 @@ class _CoursesPageState extends State<CoursesPage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => HomePage(widget.signInCallback)),
+                    MaterialPageRoute(builder: (context) => const HomePage()),
                   );
                 },
               ),
@@ -91,7 +91,7 @@ class _CoursesPageState extends State<CoursesPage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => CoursesPage(widget.signInCallback)),
+                    MaterialPageRoute(builder: (context) => const CoursesPage()),
                   );
                 },
               ),
@@ -108,7 +108,7 @@ class _CoursesPageState extends State<CoursesPage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => Schedule(widget.signInCallback)),
+                    MaterialPageRoute(builder: (context) => const Schedule()),
                   );
                 },
               ),
@@ -125,7 +125,7 @@ class _CoursesPageState extends State<CoursesPage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => History(widget.signInCallback)),
+                    MaterialPageRoute(builder: (context) => const History()),
                   );
                 },
               ),
@@ -139,7 +139,8 @@ class _CoursesPageState extends State<CoursesPage> {
                   'Logout',
                   style: TextStyle(fontWeight: FontWeight.w500, fontSize: 17)),
                 onTap: () {
-                  widget.signInCallback(0);
+                  var authenticationProvider = Provider.of<AuthenticationProvider>(context, listen: false);
+                  authenticationProvider.clearUserInfo();
                 },
               ),
             ],

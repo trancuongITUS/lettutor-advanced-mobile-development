@@ -1,7 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:src/models/tutor.dart';
-import 'package:src/ui/detail_courses/detail_courses.dart';
 
 class InfoDetail extends StatelessWidget {
   final TutorModel tutor;

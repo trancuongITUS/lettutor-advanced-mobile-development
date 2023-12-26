@@ -2,21 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
-import 'package:src/main.dart';
-import 'package:src/repository/schedule_student_repository.dart';
+import 'package:src/provider/authentication_provider.dart';
 import 'package:src/ui/home/home_page.dart';
-import 'package:src/ui/session_widget/session.dart';
 
 import '../courses/courses_page.dart';
 import '../schedule/schedule_page.dart';
 
 class History extends StatelessWidget {
-  final SignInCallback signInCallback;
-  const History(this.signInCallback, {super.key});
+  const History({super.key});
 
   @override
   Widget build(BuildContext context) {
-    ScheduleStudentRepository scheduleStudentRepository = context.watch<ScheduleStudentRepository>();
+    // ScheduleStudentRepository scheduleStudentRepository = context.watch<ScheduleStudentRepository>();
     return Scaffold(
         endDrawer: Drawer(
           child: ListView(
@@ -71,7 +68,7 @@ class History extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => HomePage(signInCallback)),
+                    MaterialPageRoute(builder: (context) => const HomePage()),
                   );
                 },
               ),
@@ -88,7 +85,7 @@ class History extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => CoursesPage(signInCallback)),
+                    MaterialPageRoute(builder: (context) => const CoursesPage()),
                   );
                 },
               ),
@@ -105,7 +102,7 @@ class History extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => Schedule(signInCallback)),
+                    MaterialPageRoute(builder: (context) => const Schedule()),
                   );
                 },
               ),
@@ -122,7 +119,7 @@ class History extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => History(signInCallback)),
+                    MaterialPageRoute(builder: (context) => const History()),
                   );
                 },
               ),
@@ -135,7 +132,10 @@ class History extends StatelessWidget {
                 title: const Text('Logout',
                     style:
                         TextStyle(fontWeight: FontWeight.w500, fontSize: 17)),
-                onTap: () {},
+                onTap: () {
+                  var authenticationProvider = Provider.of<AuthenticationProvider>(context, listen: false);
+                  authenticationProvider.clearUserInfo();
+                },
               ),
             ],
           ),

@@ -7,6 +7,7 @@ import 'package:src/models/course.dart';
 import 'package:src/models/tutor.dart';
 import 'package:src/models/user.dart';
 import 'package:src/models/user_info.dart';
+import 'package:src/provider/authentication_provider.dart';
 import 'package:src/repository/favorite_repository.dart';
 import 'package:src/repository/schedule_student_repository.dart';
 import 'package:src/ui/auth/signin_page.dart';
@@ -36,7 +37,8 @@ class _MyAppState extends State<MyApp> {
   List<CourseModel> courses = [];
   final favouriteRepository = FavouriteRepository();
   final scheduleStudentRepository = ScheduleStudentRepository();
-  late UserInfoModel userData;
+  late UserInfoModel userInfoModel;
+  AuthenticationProvider authenticationProvider = AuthenticationProvider();
 
   @override
   void initState() {
@@ -94,21 +96,14 @@ class _MyAppState extends State<MyApp> {
       userJson = Map<String, dynamic>.from(jsonData['user']);
     }
 
-    userData = UserInfoModel.fromJson(userJson);
-  }
-
-  int appState = 0;
-  void signInCallback(int appState) {
-    setState(() {
-      this.appState = appState;
-    });
+    userInfoModel = UserInfoModel.fromJson(userJson);
   }
 
   Widget getWidgetByState() {
-    if (appState == 0) {
-      return SignIn(signInCallback);
+    if (null == authenticationProvider.currentUser) {
+      return const SignIn();
     } else  {
-      return BottomNavBar(signInCallback);
+      return const BottomNavBar();
     }
   }
 
@@ -121,7 +116,7 @@ class _MyAppState extends State<MyApp> {
         Provider(create: (context) => courses),
         ChangeNotifierProvider(create: (context) => favouriteRepository),
         ChangeNotifierProvider(create: (context) => scheduleStudentRepository),
-        ChangeNotifierProvider(create: (context) => userData),
+        ChangeNotifierProvider(create: (context) => userInfoModel),
       ],
       child: MaterialApp(
           title: 'LetTutor',
@@ -130,7 +125,7 @@ class _MyAppState extends State<MyApp> {
             useMaterial3: true,
           ),
           debugShowCheckedModeBanner: false,
-          home: Consumer<UserModel>(
+          home: Consumer<AuthenticationProvider>(
           builder: (context, account, _) {
             return getWidgetByState();
           }
@@ -140,8 +135,7 @@ class _MyAppState extends State<MyApp> {
   }
 }
 class BottomNavBar extends StatefulWidget {
-  final SignInCallback signInCallback;
-  const BottomNavBar(this.signInCallback, {super.key});
+  const BottomNavBar({super.key});
 
   @override
   State<BottomNavBar> createState() => _BottomNavBarState();
@@ -153,7 +147,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
   @override
   Widget build(BuildContext context) {
     List<Widget> buildScreens() {
-      return [HomePage(widget.signInCallback), CoursesPage(widget.signInCallback), Schedule(widget.signInCallback), History(widget.signInCallback), SettingPage(widget.signInCallback)];
+      return [const HomePage(), const CoursesPage(), const Schedule(), const History(), const SettingPage()];
     }
 
     List<PersistentBottomNavBarItem> navBarsItems() {

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:src/models/course.dart';
 import 'package:src/ui/courses/list_books.dart';
 import 'package:src/ui/courses/list_courses.dart';
 
@@ -15,7 +13,7 @@ class _ContentState extends State<Content> {
   int isActived = 1;
   @override
   Widget build(BuildContext context) {
-    List<CourseModel> courses = context.watch<List<CourseModel>>();
+    // List<CourseModel> courses = context.watch<List<CourseModel>>();
     return Container(
       margin: const EdgeInsets.only(top: 20),
       child: Column(
