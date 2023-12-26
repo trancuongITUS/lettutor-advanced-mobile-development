@@ -60,7 +60,7 @@ class _SearchCourseState extends State<SearchCourse> {
                           controller: _textEditingDate,
                           onChanged: (value) => {checkTextEmpty(value)},
                           decoration: InputDecoration(
-                              contentPadding: EdgeInsets.only(top: -4, left: 0),
+                              contentPadding: const EdgeInsets.only(top: -4, left: 0),
                               border: InputBorder.none,
                               hintText: "Course",
                               hintStyle: const TextStyle(

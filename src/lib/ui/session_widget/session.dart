@@ -595,11 +595,13 @@ class _SessionState extends State<Session> {
         fontSize: 18,
       ),
       commentHint: 'Content review',
-      onCancelled: () => print('cancelled'),
+      onCancelled: () => {},
       onSubmitted: (response) {
-        print('rating: ${response.rating}, comment: ${response.comment}');
         if (response.rating < 3.0) {
-        } else {}
+        
+        } else {
+
+        }
       },
     );
     showDialog(

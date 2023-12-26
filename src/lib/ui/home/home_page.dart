@@ -346,7 +346,7 @@ class _UpcomingLessonState extends State<UpcomingLesson> with AutomaticKeepAlive
       remainingTime =
           targetTime.isAfter(now) ? targetTime.difference(now) : Duration.zero;
       
-      countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
         updateRemainingTime();
         if (remainingTime <= Duration.zero) {
           timer.cancel();

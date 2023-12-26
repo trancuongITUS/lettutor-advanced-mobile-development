@@ -26,59 +26,31 @@ class _ListCourseState extends State<ListCourse> {
       }
     }
 
-    return Container(
-      //child: Column(
-        // children: listTypeCourses.map((valueItem) {
-        //   return Container(
-        //     margin: EdgeInsets.only(top:30),
-        //     child: Column(
-        //         crossAxisAlignment: CrossAxisAlignment.start,
-        //         children:[
-        //       Text(valueItem,style: TextStyle(
-        //         fontSize: 22,
-        //         fontWeight: FontWeight.w500
-        //       ),),
-        //       ListView(
-        //         physics: NeverScrollableScrollPhysics(),
-        //         shrinkWrap: true,
-        //         children:[
-        //           Course(type: "Course",image: "images/AvatarCourse.png",title: "Life in the Internet Age",description: "Let's discuss how technology is changing the way we live",level: "Intermediate",numberLesson: "9",),
-        //           Course(type: "Course",image: "images/AvatarCourse.png",title: "Life in the Internet Age",description: "Let's discuss how technology is changing the way we live",level: "Intermediate",numberLesson: "9",),
-        //           Course(type: "Course",image: "images/AvatarCourse.png",title: "Life in the Internet Age",description: "Let's discuss how technology is changing the way we live",level: "Intermediate",numberLesson: "9",),
-        //         ]
-        //
-        //
-        //       ),
-        //     ]
-        //     ),
-        //   );}
-        // ).toList()
-      child: ListView.builder(
-        physics: const NeverScrollableScrollPhysics(),
-        shrinkWrap: true,
-        itemCount: groupedCourses.length,
-        itemBuilder: (context, index) {
-          String type = groupedCourses.keys.elementAt(index);
-          List<CourseModel> typeCourses = groupedCourses[type]!;
-          return Container(
-            margin: const EdgeInsets.only(top:30),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children:[
-                Text(type,style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w500
-                ),),
-                Column(
-                  children: typeCourses.map((course){
-                    return Course(type: "Course",course: course,);
-                  }).toList(),
-                ),
-              ]
-            ),
-          );
-        }
-      ),
+    return ListView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      itemCount: groupedCourses.length,
+      itemBuilder: (context, index) {
+        String type = groupedCourses.keys.elementAt(index);
+        List<CourseModel> typeCourses = groupedCourses[type]!;
+        return Container(
+          margin: const EdgeInsets.only(top:30),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children:[
+              Text(type,style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w500
+              ),),
+              Column(
+                children: typeCourses.map((course){
+                  return Course(type: "Course",course: course,);
+                }).toList(),
+              ),
+            ]
+          ),
+        );
+      }
     );
   }
 }

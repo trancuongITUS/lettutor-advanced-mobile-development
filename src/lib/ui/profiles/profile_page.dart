@@ -264,7 +264,7 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(height: 10),
               Center(
                 child: Text(
-                  userData?.name ?? "Anonymous",
+                  userData.name ?? "Anonymous",
                   style: const TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w500,
@@ -277,27 +277,25 @@ class _ProfilePageState extends State<ProfilePage> {
               Center(
                   child: GestureDetector(
                 onTap: () {},
-                child: Container(
-                    child: const Text(
-                  "Others review you",
-                  style: TextStyle(fontSize: 14, color: Colors.blue),
-                )),
+                child: const Text(
+                                  "Others review you",
+                                  style: TextStyle(fontSize: 14, color: Colors.blue),
+                                ),
               )),
               const SizedBox(height: 10),
               Center(
                   child: GestureDetector(
                 onTap: () {},
-                child: Container(
-                    child: const Text(
-                  "Change Password",
-                  style: TextStyle(fontSize: 14, color: Colors.blue),
-                )),
+                child: const Text(
+                                  "Change Password",
+                                  style: TextStyle(fontSize: 14, color: Colors.blue),
+                                ),
               )),
               const SizedBox(height: 40),
               Container(
                 width: double.infinity,
                 color: Colors.grey.shade200,
-                padding: EdgeInsets.all(15),
+                padding: const EdgeInsets.all(15),
                 child: const Text(
                   "Account",
                   style: TextStyle(
@@ -447,19 +445,19 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildInfo(String title, String content) {
     return Container(
       alignment: Alignment.center,
-      margin: EdgeInsets.only(top: 10),
+      margin: const EdgeInsets.only(top: 10),
       child: Wrap(
         children: [
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
           ),
           Text(
             content,
-            style: TextStyle(fontSize: 16, color: Colors.grey),
+            style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
         ],
       ),
@@ -469,11 +467,8 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildInputField(TextEditingController controller, String hintText,
       {isPassword = false, Function? validator}) {
     return TextFormField(
-      // validator: (value) {
-      //   return validator!(value ?? "");
-      // },
       controller: controller,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 14,
       ),
       decoration: InputDecoration(
@@ -481,9 +476,9 @@ class _ProfilePageState extends State<ProfilePage> {
             borderRadius: BorderRadius.all(Radius.circular(8.0))),
         hintText: hintText,
         hintStyle: TextStyle(color: Colors.grey.shade400),
-        isDense: true, // Added this
-        contentPadding: EdgeInsets.all(12),
-        suffixIcon: isPassword ? Icon(Icons.remove_red_eye) : null,
+        isDense: true,
+        contentPadding: const EdgeInsets.all(12),
+        suffixIcon: isPassword ? const Icon(Icons.remove_red_eye) : null,
       ),
       obscureText: isPassword,
     );
