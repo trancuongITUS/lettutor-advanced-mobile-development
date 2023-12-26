@@ -1,12 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:src/models/user.dart';
 
-import '../home/home.dart';
+class SignUpBasic extends StatefulWidget {
+  const SignUpBasic({super.key});
 
-class LoginBasic extends StatelessWidget {
-  const LoginBasic({super.key});
+  @override
+  State<SignUpBasic> createState() => _SignUpBasicState();
+}
+
+class _SignUpBasicState extends State<SignUpBasic> {
+  bool requiredEmail = true;
+  bool requiredPassword = true;
+  String errorMessage = "";
+
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+    UserModel user = context.watch<UserModel>();
     return Container(
       margin: const EdgeInsets.only(top: 30),
       child: Column(
@@ -32,15 +45,41 @@ class LoginBasic extends StatelessWidget {
               color: Colors.white,
               borderRadius: BorderRadius.circular(5),
             ),
-            child: const TextField(
-              decoration: InputDecoration(
+            child: TextField(
+              onChanged: (value) {
+                if (value == "") {
+                  setState(() {
+                    requiredEmail = false;
+                    errorMessage = "Please input your Email!";
+                  });
+                } else if (!RegExp(
+                        r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                    .hasMatch(value)) {
+                  setState(() {
+                    requiredEmail = false;
+                    errorMessage = "The input is not valid Email!";
+                  });
+                } else {
+                  setState(() {
+                    requiredEmail = true;
+                  });
+                }
+              },
+              controller: emailController,
+              decoration: const InputDecoration(
                 contentPadding: EdgeInsets.only(top: -10),
                 border: InputBorder.none,
               ),
               style:
-                  TextStyle(color: Colors.black87, fontWeight: FontWeight.w400),
+                  const TextStyle(color: Colors.black87, fontWeight: FontWeight.w400),
             ),
           ),
+          Visibility(
+              visible: !requiredEmail,
+              child: Text(
+                errorMessage,
+                style: const TextStyle(color: Colors.red),
+              )),
           Container(
             margin: const EdgeInsets.only(top: 12),
             child: const Text(
@@ -57,8 +96,7 @@ class LoginBasic extends StatelessWidget {
           ),
           Container(
             height: 40,
-            padding:
-                const EdgeInsets.only(left: 10, right: 0, top: 0, bottom: 0),
+            padding: const EdgeInsets.only(left: 10, right: 0, top: 0, bottom: 0),
             decoration: BoxDecoration(
               border: Border.all(
                 color: Colors.grey,
@@ -67,8 +105,24 @@ class LoginBasic extends StatelessWidget {
               color: Colors.white,
               borderRadius: BorderRadius.circular(5),
             ),
-            child: const TextField(
-              decoration: InputDecoration(
+            child: TextField(
+              onChanged: (value) {
+                if (value == "") {
+                  if (requiredPassword == true) {
+                    setState(() {
+                      requiredPassword = false;
+                    });
+                  }
+                } else {
+                  if (requiredPassword == false) {
+                    setState(() {
+                      requiredPassword = true;
+                    });
+                  }
+                }
+              },
+              controller: passwordController,
+              decoration: const InputDecoration(
                 contentPadding: EdgeInsets.only(top: 1),
                 suffixIcon: Icon(
                   Icons.remove_red_eye_outlined,
@@ -79,24 +133,24 @@ class LoginBasic extends StatelessWidget {
               ),
               obscureText: true,
               style:
-                  TextStyle(color: Colors.black87, fontWeight: FontWeight.w400),
+                  const TextStyle(color: Colors.black87, fontWeight: FontWeight.w400),
             ),
           ),
-          Container(
-              margin: const EdgeInsets.only(top: 20),
+          Visibility(
+              visible: !requiredPassword,
               child: const Text(
-                "Forgot Password?",
-                style: TextStyle(color: Colors.blueAccent, fontSize: 16),
+                "Please input your Password!",
+                style: TextStyle(color: Colors.red),
               )),
           Container(
             width: double.infinity,
-            margin: const EdgeInsets.only(top: 5),
+            margin: const EdgeInsets.only(top: 20),
             child: TextButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Home()),
-                  );
+                  if (emailController.text != "" && requiredEmail && passwordController.text != "") {
+                    user.register(emailController.text, passwordController.text);
+                    Navigator.pop(context, true);
+                  }
                 },
                 style: ButtonStyle(
                   backgroundColor:
@@ -108,7 +162,7 @@ class LoginBasic extends StatelessWidget {
                   ),
                 ),
                 child: const Text(
-                  "LOG IN",
+                  "SIGN UP",
                   style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,

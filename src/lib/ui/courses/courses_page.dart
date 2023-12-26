@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:src/main.dart';
 import 'package:src/ui/courses/filter.dart';
-import 'package:src/ui/home/home.dart';
+import 'package:src/ui/home/home_page.dart';
 import 'package:src/ui/history/history_page.dart';
 
 import '../schedule/schedule_page.dart';
 import 'content.dart';
 
-class Courses extends StatelessWidget {
-  const Courses({super.key});
+class CoursesPage extends StatefulWidget {
+  final SignInCallback signInCallback;
+  const CoursesPage(this.signInCallback, {super.key});
 
+  @override
+  State<CoursesPage> createState() => _CoursesPageState();
+}
+
+class _CoursesPageState extends State<CoursesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,7 +74,7 @@ class Courses extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const Home()),
+                    MaterialPageRoute(builder: (context) => HomePage(widget.signInCallback)),
                   );
                 },
               ),
@@ -84,7 +91,7 @@ class Courses extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const Courses()),
+                    MaterialPageRoute(builder: (context) => CoursesPage(widget.signInCallback)),
                   );
                 },
               ),
@@ -101,7 +108,7 @@ class Courses extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const Schedule()),
+                    MaterialPageRoute(builder: (context) => Schedule(widget.signInCallback)),
                   );
                 },
               ),
@@ -118,7 +125,7 @@ class Courses extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const History()),
+                    MaterialPageRoute(builder: (context) => History(widget.signInCallback)),
                   );
                 },
               ),
@@ -128,10 +135,12 @@ class Courses extends StatelessWidget {
                   color: Colors.blue.shade700,
                   size: 30,
                 ),
-                title: const Text('Logout',
-                    style:
-                        TextStyle(fontWeight: FontWeight.w500, fontSize: 17)),
-                onTap: () {},
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 17)),
+                onTap: () {
+                  widget.signInCallback(0);
+                },
               ),
             ],
           ),

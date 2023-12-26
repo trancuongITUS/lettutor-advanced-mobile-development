@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:src/models/course.dart';
+import 'package:src/models/topic.dart';
+import 'package:src/ui/detail_lesson/lesson.dart';
 
-class Overview extends StatelessWidget {
-  const Overview({super.key});
+class Overview extends StatefulWidget {
+  final CourseModel course;
+  const Overview({super.key, required this.course});
 
   @override
+  State<Overview> createState() => _OverviewState();
+}
+
+class _OverviewState extends State<Overview> {
+  @override
   Widget build(BuildContext context) {
-    List<String> topics = [
-      "The Internet",
-      "Artifical Intelligence (AI)",
-      "Social Media",
-      "Internet Privacy",
-      "Live Streaming",
-      "Coding",
-      "Technology Transforming Healthcare",
-      "Smart Home Technology",
-      "Remote Work - A Dream Job?"
-    ];
+    List<TopicModel> topics = widget.course.topics;
+
     return Column(
       children: [
         Row(
@@ -74,7 +74,7 @@ class Overview extends StatelessWidget {
         Container(
           padding: const EdgeInsets.only(left: 30),
           child: Text(
-            "Our world is rapidly changing thanks to new technology, and the vocabulary needed to discuss modern life is evolving almost daily. In this course you will learn the most up-to-date terminology from expertly crafted lessons as well from your native-speaking tutor.",
+            widget.course.reason,
             style: TextStyle(color: Colors.grey.shade700),
           ),
         ),
@@ -110,7 +110,7 @@ class Overview extends StatelessWidget {
         Container(
           padding: const EdgeInsets.only(left: 30),
           child: Text(
-            "You will learn vocabulary related to timely topics like remote work, artificial intelligence, online privacy, and more. In addition to discussion questions, you will practice intermediate level speaking tasks such as using data to describe trends.",
+            widget.course.purpose,
             style: TextStyle(color: Colors.grey.shade700),
           ),
         ),
@@ -151,9 +151,9 @@ class Overview extends StatelessWidget {
             const SizedBox(
               width: 10,
             ),
-            const Text(
-              "Intermedicate",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+            Text(
+              widget.course.level,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
             )
           ],
         ),
@@ -192,9 +192,9 @@ class Overview extends StatelessWidget {
             const SizedBox(
               width: 10,
             ),
-            const Text(
-              "9 topics",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+            Text(
+              "${topics.length} topics",
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
             )
           ],
         ),
@@ -281,24 +281,31 @@ class Overview extends StatelessWidget {
     );
   }
 
-  List<Widget> generateWidgets(List<String> list) {
+  List<Widget> generateWidgets(List<TopicModel> topicModels) {
     List<Widget> widgets = [];
 
-    for (int i = 0; i < list.length; i++) {
-      widgets.add(Container(
-        margin: const EdgeInsets.only(bottom: 20),
-        decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(5),
-            border: Border.all(width: 0.5, color: Colors.grey.shade300)),
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 30),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("${i + 1}."),
-            Text(list[i]),
-          ],
-        ),
+    for (int i = 0; i < topicModels.length; i++) {
+      widgets.add(GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => Lesson(title: topicModels[i].name, url: topicModels[i].nameFile)));
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 20),
+          decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(5),
+              border: Border.all(width: 0.5, color: Colors.grey.shade300)),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 30),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("${i + 1}."),
+              Text(topicModels[i].name),
+            ],
+          ),
+        )
       ));
     }
 

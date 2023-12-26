@@ -1,23 +1,44 @@
-// ignore_for_file: avoid_print
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:rating_dialog/rating_dialog.dart';
+import 'package:src/models/schedule.dart';
+import 'package:src/models/tutor.dart';
 
 class Session extends StatefulWidget {
+  final ScheduleModel schedule;
   final String typeSession;
-  final String timeOrNumber;
+
   const Session(
-      {super.key, required this.typeSession, required this.timeOrNumber});
+      {super.key, required this.schedule, required this.typeSession});
 
   @override
   State<Session> createState() => _SessionState();
 }
 
 class _SessionState extends State<Session> {
+  String convertDate(int time) {
+    return DateFormat.yMMMMEEEEd().format(DateTime.fromMillisecondsSinceEpoch(time));
+  }
+
+  String convertTime(int start,int end) {
+    DateTime timeStart=DateTime.fromMillisecondsSinceEpoch(start);
+    DateTime timeEnd=DateTime.fromMillisecondsSinceEpoch(end);
+
+    String resultStart="${timeStart.hour.toString().length == 1 ? "0${timeStart.hour}":timeStart.hour.toString()} : ${timeStart.minute.toString().length == 1 ? "0${timeStart.minute}" : timeStart.minute.toString()}";
+    String resultEnd="${timeEnd.hour.toString().length == 1 ? "0${timeEnd.hour}":timeEnd.hour.toString()} : ${timeEnd.minute.toString().length == 1 ? "0${timeEnd.minute}" : timeEnd.minute.toString()}";
+    return "$resultStart - $resultEnd";
+  }
+
   @override
   Widget build(BuildContext context) {
+    List<TutorModel> tutors = context.watch<List<TutorModel>>();
+    List<TutorModel> myTutor = tutors.where((element) => 
+      element.userId == widget.schedule.tutorId
+    ).toList();
+
     return Container(
       margin: const EdgeInsets.only(top: 20),
       padding: const EdgeInsets.all(15),
@@ -27,11 +48,10 @@ class _SessionState extends State<Session> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Thu, 26 Oct 23",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+          Text(
+            convertDate(widget.schedule.startTimestamp),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
           ),
-          Text(widget.timeOrNumber),
           Container(
             margin: const EdgeInsets.only(top: 15),
             padding: const EdgeInsets.all(15),
@@ -50,7 +70,7 @@ class _SessionState extends State<Session> {
                     ),
                   ),
                   child: ClipOval(
-                    child: Image.asset('img/login_bg.png'),
+                    child: Image.network(myTutor[0].avatar ?? "https://api.app.lettutor.com/avatar/e9e3eeaa-a588-47c4-b4d1-ecfa190f63faavatar1632109929661.jpg"),
                   ),
                 ),
                 const SizedBox(
@@ -59,24 +79,24 @@ class _SessionState extends State<Session> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "Keegan",
+                    Text(
+                      myTutor[0].name,
                       style:
-                          TextStyle(fontWeight: FontWeight.w500, fontSize: 20),
+                          const TextStyle(fontWeight: FontWeight.w500, fontSize: 20),
                     ),
                     Row(
                       children: [
                         SvgPicture.asset(
-                          'img/Vietnam.svg',
+                          myTutor[0].country != null ? "https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.4.3/flags/4x3/${myTutor[0].country.toString().toLowerCase()}.svg" : "https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.4.3/flags/4x3/ph.svg",
                           width: 16,
                           height: 16,
                         ),
                         const SizedBox(
                           width: 3,
                         ),
-                        const Text(
-                          "Vietnam",
-                          style: TextStyle(
+                        Text(
+                          myTutor[0].country ?? "Vietnam",
+                          style: const TextStyle(
                               fontWeight: FontWeight.w400,
                               color: Colors.black54,
                               fontSize: 14),
@@ -122,7 +142,7 @@ class _SessionState extends State<Session> {
                   children: [
                     Text(
                       widget.typeSession == "Schedule"
-                          ? "03:30 - 03:55"
+                          ? convertTime(widget.schedule.startTimestamp, widget.schedule.endTimestamp)
                           : "Lesson Time: 03:30 - 03:55",
                       style: const TextStyle(
                         fontSize: 18,

@@ -1,46 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:multiselect/multiselect.dart';
 import 'package:get/get.dart';
+import 'package:src/ui/home/home_page.dart';
 import 'package:src/ui/home/time_range.dart';
 
 class SearchTutor extends StatefulWidget {
-  const SearchTutor({super.key});
+  final FilterCallback filterCallback;
+
+  const SearchTutor(this.filterCallback, {super.key});
 
   @override
   State<SearchTutor> createState() => _SearchTutorState();
 }
 
-List<Widget> generateWidgets(List<String> list) {
-  List<Widget> widgets = [];
-  Color backgroundColor = const Color.fromARGB(255, 232, 232, 232);
-
-  for (int i = 0; i < list.length; i++) {
-    widgets.add(TextButton(
-        onPressed: () {},
-        style: ButtonStyle(
-          minimumSize: MaterialStateProperty.all(const Size(40, 30)),
-          padding: MaterialStateProperty.all(
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 5)),
-          backgroundColor: MaterialStateProperty.all<Color>(backgroundColor),
-          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-        ),
-        child: Text(
-          list[i],
-          style: const TextStyle(
-              fontSize: 15, fontWeight: FontWeight.w400, color: Colors.black87),
-        )));
-  }
-
-  return widgets;
-}
-
 class _SearchTutorState extends State<SearchTutor> {
   DateTime selectDate = DateTime.now();
   final TextEditingController _textEditingDate = TextEditingController();
+  final TextEditingController _textName = TextEditingController();
   final List<String> _items = [
     "Foreign Tutor",
     "Vietnamese Tutor",
@@ -48,11 +24,13 @@ class _SearchTutorState extends State<SearchTutor> {
   ];
   List<String> selectedOptionList = [];
   var selectedOption = ''.obs;
+  String selectedButton = 'All';
+
   @override
   Widget build(BuildContext context) {
     List<String> listFilters = [
       "All",
-      "English for kids",
+      "English for Kids",
       "English for Business",
       "Conversational",
       "STARTERS",
@@ -64,7 +42,6 @@ class _SearchTutorState extends State<SearchTutor> {
       "TOEFL",
       "TOEIC"
     ];
-    List<Widget> generatedWidgets = generateWidgets(listFilters);
     return Container(
       padding: const EdgeInsets.only(left: 20, right: 20),
       width: double.infinity,
@@ -94,14 +71,17 @@ class _SearchTutorState extends State<SearchTutor> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const TextField(
-              decoration: InputDecoration(
+            child: TextField(
+              onSubmitted: (value) {
+                widget.filterCallback(selectedButton, value, selectedOptionList);
+              },
+              decoration: const InputDecoration(
                   contentPadding: EdgeInsets.only(top: -12, left: 5, right: 2),
                   border: InputBorder.none,
                   hintText: "Enter tutor name...",
                   hintStyle: TextStyle(
                       color: Colors.grey, fontWeight: FontWeight.w400)),
-              style: TextStyle(
+              style: const TextStyle(
                   color: Colors.black87,
                   fontWeight: FontWeight.w400,
                   fontSize: 16),
@@ -127,6 +107,9 @@ class _SearchTutorState extends State<SearchTutor> {
               whenEmpty: "Select tutor nationality",
               onChanged: (value) {
                 selectedOptionList = value;
+                if(selectedOptionList.isNotEmpty) {
+                  widget.filterCallback(selectedButton, _textName.text, value);
+                }
                 selectedOption.value = "";
                 for (var element in selectedOptionList) {
                   selectedOption.value = "${selectedOption.value}, $element";
@@ -201,8 +184,32 @@ class _SearchTutorState extends State<SearchTutor> {
           Container(
             margin: const EdgeInsets.only(top: 10, bottom: 0),
             child: Wrap(
-              spacing: 5,
-              children: generatedWidgets,
+              spacing: 6,
+              runSpacing: -5,
+              children: List.generate(
+                listFilters.length,
+                (index) => TextButton(
+                  onPressed: () {
+                    setState(() {
+                      selectedButton = listFilters[index];
+                    });
+                    widget.filterCallback(listFilters[index], _textName.text, selectedOptionList);
+                  },
+                  style: ButtonStyle(
+                    minimumSize: MaterialStateProperty.all(const Size(40, 30)),
+                    padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 10, vertical: 5)),
+                    backgroundColor: selectedButton == listFilters[index] ? MaterialStateProperty.all<Color>(Colors.blue.shade100) : MaterialStateProperty.all<Color>(const Color.fromRGBO(228, 230, 235, 1)),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)))
+                  ),
+                  child: Text(
+                    listFilters[index],
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: selectedButton == listFilters[index] ? Colors.blue.shade800 : const Color.fromARGB(100, 100, 100, 1)
+                    ),
+                  ),
+              )),
             ),
           ),
           TextButton(
