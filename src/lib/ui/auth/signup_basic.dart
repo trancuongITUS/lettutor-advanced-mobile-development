@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:src/models/user.dart';
 import 'package:src/provider/authentication_provider.dart';
 
 class SignUpBasic extends StatefulWidget {

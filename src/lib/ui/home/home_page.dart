@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:src/models/data/tutors/tutor_data.dart';
 import 'package:src/models/schedule.dart';
-import 'package:src/models/tutor.dart';
 import 'package:src/provider/authentication_provider.dart';
 import 'package:src/repository/schedule_student_repository.dart';
+import 'package:src/responses/get_list_tutors_response.dart';
+import 'package:src/services/tutor_api.dart';
 
 import 'package:src/ui/courses/courses_page.dart';
 import 'package:src/ui/home/list_tutors.dart';
@@ -27,87 +29,105 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
 
-  List<TutorModel> tutorsResult = [];
-  List<TutorModel> tutors = [];
+  List<TutorData> _tutors = [];
+  List<String> _favoriteTutorIds = [];
+  bool isLoading = true;
+  bool hasCalledAPI = false;
 
   @override
   bool get wantKeepAlive => true;
 
   @override
-  void initState() {
-    super.initState();
+  Future<void> didChangeDependencies() async {
+    super.didChangeDependencies();
+    var authenticationProvider = Provider.of<AuthenticationProvider>(context);
 
-    Future.delayed(Duration.zero, () {
-      filterCallback("All", "", []);
+    if (hasCalledAPI) {
+      await Future.wait([callAPIGetTutorList(1, TutorAPI(), authenticationProvider)]).whenComplete(() => {
+        if (mounted) {
+          setState(() {
+            hasCalledAPI = true;
+            isLoading = false;
+          })
+        }
+      });
+    }
+  }
+
+  Future<void> callAPIGetTutorList(int pageIndex, TutorAPI tutorAPI, AuthenticationProvider authenticationProvider) async {
+    await tutorAPI.getListTutor(
+      accessToken: authenticationProvider.token?.access?.token ?? "",
+      perPage: 10,
+      page: pageIndex,
+      onSuccess: (response) async {
+        handleTutorsFromAPI(response);
+      },
+      onFail: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${error.toString()}')),
+        );
+      }
+    );
+  }
+
+  void handleTutorsFromAPI(GetListTutorsResponse response) {
+    response.favoriteTutor?.forEach((element) {
+      if (element.secondId != null) {
+        _favoriteTutorIds.add(element.secondId!);
+      }
     });
+
+    List<TutorData> noneFavoriteTutors = [];
+    List<TutorData> favoriteTutors = [];
+    response.tutors?.rows?.forEach((element) {
+      if (isFavoriteTutor(element)) {
+        favoriteTutors.add(element);
+      } else {
+        noneFavoriteTutors.add(element);
+      }
+    });
+
+    favoriteTutors.sort((b, a) => (a.rating ?? 0).compareTo((b.rating ?? 0)));
+    noneFavoriteTutors.sort((b, a) => (a.rating ?? 0).compareTo((b.rating ?? 0)));
+
+    _tutors.addAll(favoriteTutors);
+    _tutors.addAll(noneFavoriteTutors);
+  }
+
+  bool isFavoriteTutor(TutorData tutorData) {
+    for (var element in _favoriteTutorIds) {
+      if (element == tutorData.userId) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   void filterCallback(String filter, String nameTutor, List<String> nations) {
-    List<TutorModel> temp = [];
-    if (filter == "All") {
-      temp = tutors;
-    } else {
-      temp = tutors.where((tutor) => tutor.specialties.contains(filter)).toList();
-    }
-
-    if (nations.isNotEmpty) {
-      List<TutorModel> filterByNation = [];
-      for (var element in nations) {
-        if ("Foreign Tutor" == element) {
-          filterByNation = filterByNation + temp.where((tutor) => !tutor.country.contains("US") && !tutor.country.contains("Vietnam")).toList();
-        } else if ("Vietnamese Tutor" == element) {
-          filterByNation = filterByNation + temp.where((tutor) => tutor.country.contains("Vietnam")).toList();
-        } else if ("Native English Tutor" == element) {
-          filterByNation = filterByNation + temp.where((tutor) => tutor.country.contains("US") || tutor.country.contains("England")).toList();
-        }
-      }
-
-      temp = temp.where((tutor) => tutor.name.toLowerCase().contains(nameTutor.toLowerCase())).toList();
-
-      setState(() {
-        tutorsResult = temp;
-      });
-    }
+    
   }
 
-  void filterByNationCallback(List<String> nation) {
-    List<TutorModel> temp=[];
-    if(nation.isNotEmpty) {
-      for (var element in nation) {
-        if ("Foreign Tutor" == element) {
-          temp = temp + tutors
-            .where((tutor) => !tutor.country.contains("US") && !tutor.country.contains("England") && !tutor.country.contains("Vietnam"))
-            .toList();
-        } else if ("Vietnamese Tutor" == element) {
-          temp = temp + tutors
-            .where((tutor) => tutor.country.contains("Vietnam"))
-            .toList();
-        } else if (element=="Native English Tutor") {
-          temp = temp + tutors
-            .where((tutor) => tutor.country.contains("US") || tutor.country.contains("England"))
-            .toList();
-        }
-      }
-      setState(() {
-        tutorsResult = temp;
-      });
-    }
-  }
+  Future<void> refreshHomePage(AuthenticationProvider authenticationProvider) async {
+    setState(() {
+      _tutors = [];
+      _favoriteTutorIds = [];
+      isLoading = true;
+    });
 
-  void filterByNameCallback(String name) {
+    await Future.wait([callAPIGetTutorList(1, TutorAPI(), authenticationProvider)]).whenComplete(() {
       setState(() {
-        tutorsResult = tutors
-          .where((tutor) => tutor.name.toLowerCase().contains(name.toLowerCase()))
-          .toList();
-      }
-    );
+        isLoading = false;
+      });
+
+      return Future<void>.delayed(const Duration(seconds: 0));
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    tutors = context.watch<List<TutorModel>>();
-    ScheduleStudentRepository scheduleStudentRepository = context.watch<ScheduleStudentRepository>();
+    var authenticationProvider = Provider.of<AuthenticationProvider>(context);
     
     return Scaffold(
       endDrawer: Drawer(
@@ -276,19 +296,26 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
               )),
         ),
       ),
-      body: SingleChildScrollView(
-          child: Column(children: [
-        UpcomingLesson(scheduleStudentRepository: scheduleStudentRepository,),
-        SearchTutor(filterCallback),
-        const Divider(
-          color: Colors.grey,
-          height: 10,
-          thickness: 0.5,
-          indent: 20,
-          endIndent: 10,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          refreshHomePage(authenticationProvider);
+        },
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              SearchTutor(filterCallback),
+              const Divider(
+                color: Colors.grey,
+                height: 10,
+                thickness: 0.5,
+                indent: 20,
+                endIndent: 10,
+              ),
+              ListTutors(_tutors, _favoriteTutorIds),
+            ],
+          ),
         ),
-        ListTutors(tutorsResult),
-      ])),
+      ),
     );
   }
 }
