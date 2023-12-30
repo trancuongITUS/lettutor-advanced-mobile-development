@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:src/models/data/tutors/tutor_data.dart';
-import 'package:src/repository/favorite_repository.dart';
+import 'package:src/provider/authentication_provider.dart';
+import 'package:src/services/user_api.dart';
+import 'package:src/ui/detail_tutor/detail_tutor.dart';
+import 'package:src/ui/home/home_page.dart';
 
 class Tutor extends StatefulWidget {
   final TutorData tutor;
   final bool isFavorite;
-  const Tutor(this.tutor, this.isFavorite, {super.key});
+  final ChangeFavoriteCallback changeFavoriteCallback;
+  const Tutor(this.tutor, this.isFavorite, this.changeFavoriteCallback, {super.key});
 
   @override
   State<Tutor> createState() => _TutorState();
@@ -67,10 +71,37 @@ List<Widget> generateRatings(int rating) {
 }
 
 class _TutorState extends State<Tutor> {
+
+  Future<void> callAPIManageFavoriteTutor(String tutorId, AuthenticationProvider authenticationProvider) async {
+    UserAPI userAPI = UserAPI();
+    await userAPI.favoriteTutor(
+      accessToken: authenticationProvider.token?.access?.token ?? "",
+      tutorId: tutorId,
+      onSuccess: (message, unfavored) async {
+        setState(() {
+          widget.changeFavoriteCallback(tutorId);
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Update favorite tutor successfully", style: TextStyle(color: Colors.white)),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      },
+      onFail: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${error.toString()}')),
+        );
+      }
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
-    FavouriteRepository favouriteRepository = context.watch<FavouriteRepository>();
-    var isInFavourite = favouriteRepository.itemIds.contains(widget.tutor.userId);
+    var authenticationProvider = Provider.of<AuthenticationProvider>(context);
     List<Widget> generatedWidgets = generateWidgets(widget.tutor.specialties?.split(',') ?? []);
     
     return Container(
@@ -98,13 +129,13 @@ class _TutorState extends State<Tutor> {
               Row(
                 children: [
                   GestureDetector(
-                    // onTap: () {
-                    //   Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //         builder: (context) => DetailTutor(widget.tutor)),
-                    //   );
-                    // },
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => DetailTutor(widget.tutor, widget.changeFavoriteCallback)),
+                      );
+                    },
                     child: Container(
                       width: 65,
                       height: 65,
@@ -165,7 +196,7 @@ class _TutorState extends State<Tutor> {
                   color: widget.isFavorite ? Colors.red : Colors.blueAccent,
                 ),
                 onPressed: () {
-                  // isInFavourite ? favouriteRepository.remove(widget.tutor.userId) : favouriteRepository.add(widget.tutor.userId);
+                  callAPIManageFavoriteTutor(widget.tutor.userId!, authenticationProvider);
                 },
               )
             ],

@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:multiselect/multiselect.dart';
 import 'package:provider/provider.dart';
-import 'package:src/models/user_info.dart';
+import 'package:src/models/data/users/user_data.dart';
 import 'package:src/ui/profiles/birthday_select_widget.dart';
 import 'package:src/ui/profiles/country_select_widget.dart';
 
@@ -18,7 +18,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  late UserInfoModel userData;
+  late UserData userData;
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   TextEditingController nameController = TextEditingController();
@@ -113,13 +113,13 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void initValues(UserInfoModel userData) {
+  void initValues(UserData userData) {
     setState(() {
-      nameController.text = userData.name;
-      emailController.text = userData.email;
-      phoneController.text = userData.phone;
-      studyScheduleController.text = userData.studySchedule;
-      String country = userData.country;
+      nameController.text = userData.name ?? "";
+      emailController.text = userData.email ?? "";
+      phoneController.text = userData.phone ?? "";
+      studyScheduleController.text = userData.studySchedule ?? "";
+      String country = userData.country ?? "";
       bool check = false;
       for (var element in countries) {
         if (element.toLowerCase() == country.toLowerCase()) {
@@ -136,7 +136,7 @@ class _ProfilePageState extends State<ProfilePage> {
       selectedDate =
           DateTime.parse(userData.birthday ?? DateTime.now().toString());
 
-      String level = userData.level;
+      String level = userData.level ?? "";
       check = false;
       for (var element in itemsLevel) {
         if (element.toLowerCase().compareTo(level.toLowerCase()) == 0) {
@@ -156,7 +156,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    userData = context.watch<UserInfoModel>();
+    userData = context.watch<UserData>();
 
     if (hasInitValue == false) {
       initValues(userData);
@@ -272,7 +272,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               const SizedBox(height: 10),
-              Center(child: _buildInfo("Account ID: ", userData.id)),
+              Center(child: _buildInfo("Account ID: ", userData.id!)),
               const SizedBox(height: 10),
               Center(
                   child: GestureDetector(
@@ -312,7 +312,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildForm(UserInfoModel userData) {
+  Widget _buildForm(UserData userData) {
     return Container(
       margin: const EdgeInsets.all(20),
       child: Form(
@@ -411,13 +411,12 @@ class _ProfilePageState extends State<ProfilePage> {
     return ElevatedButton(
       onPressed: () {
         if (_formKey.currentState!.validate()) {
-          UserInfoModel updatedUser = userData;
+          UserData updatedUser = userData;
           updatedUser.name = nameController.text;
           updatedUser.country = selectedCountry;
           updatedUser.birthday = DateFormat('yyyy-MM-dd').format(selectedDate);
           updatedUser.level = selectedLevel;
           updatedUser.studySchedule = studyScheduleController.text;
-          userData.updateData(updatedUser);
 
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

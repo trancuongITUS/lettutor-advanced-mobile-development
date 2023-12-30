@@ -1,9 +1,9 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:src/models/tutor.dart';
+import 'package:src/models/data/tutors/tutor_info_data.dart';
 
 class InfoDetail extends StatelessWidget {
-  final TutorModel tutor;
+  final TutorInfoData tutor;
   const InfoDetail(this.tutor, {super.key});
 
   @override
@@ -24,7 +24,7 @@ class InfoDetail extends StatelessWidget {
           Container(
             padding: const EdgeInsets.only(left: 10),
             child: Text(
-                tutor.education,
+                tutor.education!,
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 16)
               ),
           ),
@@ -42,7 +42,7 @@ class InfoDetail extends StatelessWidget {
             decoration: BoxDecoration(
                 color: Colors.blue.shade100,
                 borderRadius: BorderRadius.circular(20)),
-            child: Text(tutor.languages,
+            child: Text(tutor.languages!,
                 style: TextStyle(color: Colors.blue.shade800, fontSize: 16)),
           ),
           const SizedBox(
@@ -58,7 +58,7 @@ class InfoDetail extends StatelessWidget {
             child: Wrap(
                 spacing: 10,
                 runSpacing: 10,
-                children: generateWidgets(tutor.specialties)),
+                children: generateWidgets(tutor.specialties!.split(','))),
           ),
           const SizedBox(
             height: 20,
@@ -134,7 +134,7 @@ class InfoDetail extends StatelessWidget {
           Container(
             padding: const EdgeInsets.only(left: 10),
             child: Text(
-                tutor.interests,
+                tutor.interests!,
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
           ),
           const SizedBox(
@@ -148,7 +148,7 @@ class InfoDetail extends StatelessWidget {
           Container(
             padding: const EdgeInsets.only(left: 10),
             child: Text(
-                tutor.experience,
+                tutor.experience!,
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
           ),
         ],

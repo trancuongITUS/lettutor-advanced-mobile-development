@@ -90,7 +90,7 @@ class TutorAPI extends BaseAPI {
         "tutoringTimeAvailable": [null, null]
       },
       "search": searchKeys,
-      "page": "$page",
+      "page": '$page',
       "perPage": 10
     }, headers: {
       "Authorization": "Bearer $accessToken"

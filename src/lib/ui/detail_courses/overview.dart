@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:src/models/course.dart';
-import 'package:src/models/topic.dart';
+import 'package:src/models/data/courses/course_data.dart';
+import 'package:src/models/data/courses/course_topic_data.dart';
 import 'package:src/ui/detail_lesson/lesson.dart';
 
 class Overview extends StatefulWidget {
-  final CourseModel course;
+  final CourseData course;
   const Overview({super.key, required this.course});
 
   @override
@@ -14,7 +14,7 @@ class Overview extends StatefulWidget {
 class _OverviewState extends State<Overview> {
   @override
   Widget build(BuildContext context) {
-    List<TopicModel> topics = widget.course.topics;
+    List<CourseTopicData> topics = widget.course.topics!;
 
     return Column(
       children: [
@@ -74,7 +74,7 @@ class _OverviewState extends State<Overview> {
         Container(
           padding: const EdgeInsets.only(left: 30),
           child: Text(
-            widget.course.reason,
+            widget.course.reason!,
             style: TextStyle(color: Colors.grey.shade700),
           ),
         ),
@@ -110,7 +110,7 @@ class _OverviewState extends State<Overview> {
         Container(
           padding: const EdgeInsets.only(left: 30),
           child: Text(
-            widget.course.purpose,
+            widget.course.purpose!,
             style: TextStyle(color: Colors.grey.shade700),
           ),
         ),
@@ -152,7 +152,7 @@ class _OverviewState extends State<Overview> {
               width: 10,
             ),
             Text(
-              widget.course.level,
+              widget.course.level!,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
             )
           ],
@@ -281,15 +281,15 @@ class _OverviewState extends State<Overview> {
     );
   }
 
-  List<Widget> generateWidgets(List<TopicModel> topicModels) {
+  List<Widget> generateWidgets(List<CourseTopicData> topics) {
     List<Widget> widgets = [];
 
-    for (int i = 0; i < topicModels.length; i++) {
+    for (int i = 0; i < topics.length; i++) {
       widgets.add(GestureDetector(
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => Lesson(title: topicModels[i].name, url: topicModels[i].nameFile)));
+            MaterialPageRoute(builder: (context) => Lesson(title: topics[i].name!, url: topics[i].nameFile!)));
         },
         child: Container(
           margin: const EdgeInsets.only(bottom: 20),
@@ -302,7 +302,7 @@ class _OverviewState extends State<Overview> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text("${i + 1}."),
-              Text(topicModels[i].name),
+              Text(topics[i].name!),
             ],
           ),
         )

@@ -5,9 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:src/models/course.dart';
 import 'package:src/models/tutor.dart';
-import 'package:src/models/user.dart';
-import 'package:src/models/user_info.dart';
 import 'package:src/provider/authentication_provider.dart';
+import 'package:src/provider/course_provider.dart';
 import 'package:src/repository/favorite_repository.dart';
 import 'package:src/repository/schedule_student_repository.dart';
 import 'package:src/ui/auth/signin_page.dart';
@@ -32,20 +31,18 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final UserModel account = UserModel(email: "", password: "");
   List<TutorModel> tutors = [];
   List<CourseModel> courses = [];
   final favouriteRepository = FavouriteRepository();
   final scheduleStudentRepository = ScheduleStudentRepository();
-  late UserInfoModel userInfoModel;
   AuthenticationProvider authenticationProvider = AuthenticationProvider();
+  CourseProvider courseProvider = CourseProvider();
 
   @override
   void initState() {
     super.initState();
     loadTutors();
     loadCourses();
-    loadUser();
   }
 
   Future<void> loadTutors() async {
@@ -87,18 +84,6 @@ class _MyAppState extends State<MyApp> {
     courses = coursesList.map((json) => CourseModel.fromJson(json)).toList();
   }
 
-  Future<void> loadUser() async {
-    String jsonString = await rootBundle.loadString('assets/data/dataUser.json');
-    Map<String, dynamic> jsonData = json.decode(jsonString);
-
-    Map<String, dynamic> userJson = {};
-    if (null != jsonData['user']) {
-      userJson = Map<String, dynamic>.from(jsonData['user']);
-    }
-
-    userInfoModel = UserInfoModel.fromJson(userJson);
-  }
-
   Widget getWidgetByState() {
     if (null == authenticationProvider.currentUser) {
       return const SignIn();
@@ -111,12 +96,11 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => account),
         Provider(create: (context) => tutors),
         Provider(create: (context) => courses),
         ChangeNotifierProvider(create: (context) => favouriteRepository),
         ChangeNotifierProvider(create: (context) => scheduleStudentRepository),
-        ChangeNotifierProvider(create: (context) => userInfoModel),
+        ChangeNotifierProvider(create: (context) => courseProvider)
       ],
       child: MaterialApp(
           title: 'LetTutor',

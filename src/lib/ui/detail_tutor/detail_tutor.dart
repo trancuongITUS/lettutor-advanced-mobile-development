@@ -3,23 +3,62 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'package:expandable_text/expandable_text.dart';
-import 'package:src/models/tutor.dart';
-import 'package:src/repository/favorite_repository.dart';
+import 'package:src/common/loading.dart';
+import 'package:src/models/data/tutors/tutor_data.dart';
+import 'package:src/models/data/tutors/tutor_info_data.dart';
+import 'package:src/provider/authentication_provider.dart';
+import 'package:src/services/tutor_api.dart';
 import 'package:src/ui/booking/booking.dart';
 import 'package:src/ui/detail_tutor/info_detail.dart';
 import 'package:src/ui/detail_tutor/list_reviews.dart';
 import 'package:src/ui/detail_tutor/video_intro.dart';
+import 'package:src/ui/home/home_page.dart';
 
 class DetailTutor extends StatefulWidget {
-  final TutorModel tutor;
-  const DetailTutor(this.tutor, {super.key});
+  final TutorData tutor;
+  final ChangeFavoriteCallback changeFavoriteCallback;
+  const DetailTutor(this.tutor, this.changeFavoriteCallback, {super.key});
 
   @override
   State<DetailTutor> createState() => _DetailTutorState();
 }
 
 class _DetailTutorState extends State<DetailTutor> {
-  bool isFavorite = false;
+  late TutorData tutor;
+  late TutorInfoData tutorInfo;
+  bool hasCalledAPI = false;
+
+  @override
+  void initState() {
+    tutor = widget.tutor;
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!hasCalledAPI) {
+      callAPIGetTutorById(TutorAPI(), Provider.of<AuthenticationProvider>(context, listen: false), tutor.userId!);
+    }
+  }
+
+  Future<void> callAPIGetTutorById(TutorAPI tutorAPI, AuthenticationProvider authenticationProvider, String userId) async {
+    await tutorAPI.getTutorById(
+        accessToken: authenticationProvider.token?.access?.token ?? "",
+        tutorId: userId,
+        onSuccess: (response) async {
+          setState(() {
+            tutorInfo = response;
+            hasCalledAPI = true;
+          });
+        },
+        onFail: (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${error.toString()}')),
+          );
+        });
+  }
+
   List<Widget> generateRatings(double rating) {
     int realRating = rating.toInt();
     List<Widget> widgets = [];
@@ -46,8 +85,6 @@ class _DetailTutorState extends State<DetailTutor> {
 
   @override
   Widget build(BuildContext context) {
-    FavouriteRepository favouriteRepository = context.watch<FavouriteRepository>();
-    var isInFavourite = favouriteRepository.itemIds.contains(widget.tutor.userId);
 
     return Scaffold(
       appBar: PreferredSize(
@@ -86,8 +123,8 @@ class _DetailTutorState extends State<DetailTutor> {
       ),
       ),
       ),
-      body: SingleChildScrollView(
-      child: Container(
+      body: !hasCalledAPI ? const Loading() : SingleChildScrollView(
+        child: Container(
           padding: const EdgeInsets.all(25),
           child: Column(children: [
             Row(
@@ -103,7 +140,7 @@ class _DetailTutorState extends State<DetailTutor> {
                     ),
                   ),
                   child: ClipOval(
-                    child: Image.network(widget.tutor.avatar),
+                    child: Image.network(tutor.avatar!),
                   ),
                 ),
                 const SizedBox(
@@ -114,7 +151,7 @@ class _DetailTutorState extends State<DetailTutor> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Text(
-                      widget.tutor.name,
+                      tutor.name!,
                       style: const TextStyle(
                           fontWeight: FontWeight.w500, fontSize: 22),
                     ),
@@ -123,7 +160,7 @@ class _DetailTutorState extends State<DetailTutor> {
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
-                      children: generateRatings(widget.tutor.rating ?? 0.0)
+                      children: generateRatings(tutor.rating ?? 0.0)
                     ),
                     const SizedBox(
                       height: 10,
@@ -138,7 +175,7 @@ class _DetailTutorState extends State<DetailTutor> {
                           width: 3,
                         ),
                         Text(
-                          widget.tutor.country,
+                          tutor.country!,
                           style: const TextStyle(
                             fontWeight: FontWeight.w400,
                             color: Colors.black54,
@@ -154,7 +191,7 @@ class _DetailTutorState extends State<DetailTutor> {
               height: 15,
             ),
             ExpandableText(
-              widget.tutor.bio,
+              tutor.bio!,
               expandText: 'More',
               collapseText: 'Less',
               maxLines: 2,
@@ -170,16 +207,16 @@ class _DetailTutorState extends State<DetailTutor> {
                   children: [
                     IconButton(
                         onPressed: () {
-                          isInFavourite ? favouriteRepository.remove(widget.tutor.userId) : favouriteRepository.add(widget.tutor.userId);
+                          widget.changeFavoriteCallback(widget.tutor.userId!);
                         },
                         icon: Icon(
-                          isInFavourite ? Icons.favorite : Icons.favorite_border,
-                          color: isInFavourite ? Colors.red : Colors.blueAccent,
+                          tutorInfo.isFavorite! ? Icons.favorite : Icons.favorite_border,
+                          color: tutorInfo.isFavorite! ? Colors.red : Colors.blueAccent,
                           size: 25,
                         )),
                     Text(
                       "Favorite",
-                      style: TextStyle(color: isInFavourite ? Colors.red : Colors.blueAccent),
+                      style: TextStyle(color: tutorInfo.isFavorite! ? Colors.red : Colors.blueAccent),
                     )
                   ],
                 ),
@@ -205,11 +242,10 @@ class _DetailTutorState extends State<DetailTutor> {
               ],
             ),
             const SizedBox(height: 20),
-            ChewieDemo(linkVideo: widget.tutor.video,),
-            ChewieDemo(linkVideo: widget.tutor.video,),
-            InfoDetail(widget.tutor),
+            ChewieDemo(linkVideo: tutorInfo.video!,),
+            InfoDetail(tutorInfo),
             const SizedBox(height: 20),
-            ListReview(widget.tutor.feedbacks),
+            ListReview(tutor.feedbacks!),
             const SizedBox(height: 20),
             const Booking()
           ]))));

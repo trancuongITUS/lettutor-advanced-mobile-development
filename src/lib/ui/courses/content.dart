@@ -13,7 +13,6 @@ class _ContentState extends State<Content> {
   int isActived = 1;
   @override
   Widget build(BuildContext context) {
-    // List<CourseModel> courses = context.watch<List<CourseModel>>();
     return Container(
       margin: const EdgeInsets.only(top: 20),
       child: Column(

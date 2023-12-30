@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:src/models/course.dart';
+import 'package:src/models/data/courses/course_data.dart';
 import 'package:src/ui/courses/course.dart';
 import 'package:src/ui/detail_courses/overview.dart';
 
 class DetailCourse extends StatefulWidget {
-  final CourseModel course;
+  final CourseData course;
   const DetailCourse({super.key, required this.course});
 
   @override

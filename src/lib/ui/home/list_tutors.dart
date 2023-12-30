@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:src/models/data/tutors/tutor_data.dart';
+import 'package:src/ui/home/home_page.dart';
 
 import 'package:src/ui/home/tutor.dart';
 
 class ListTutors extends StatefulWidget {
 
-  const ListTutors(this.tutors, this.favoriteTutorIds, {super.key});
+  const ListTutors(this.tutors, this.favoriteTutorIds, this.changeFavoriteCallback, {super.key});
   final List<TutorData> tutors;
   final List<String> favoriteTutorIds;
+  final ChangeFavoriteCallback changeFavoriteCallback;
 
   @override
   State<ListTutors> createState() => _ListTutorsState();
@@ -49,7 +51,7 @@ class _ListTutorsState extends State<ListTutors> {
               shrinkWrap: true,
               itemCount: widget.tutors.length,
               itemBuilder: (context, index) {
-                return Tutor(widget.tutors[index], isFavoriteTutor(widget.tutors[index]));
+                return Tutor(widget.tutors[index], isFavoriteTutor(widget.tutors[index]), widget.changeFavoriteCallback);
               },
             ),
           ),

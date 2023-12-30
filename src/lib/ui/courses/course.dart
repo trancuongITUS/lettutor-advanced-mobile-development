@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:src/models/course.dart';
+import 'package:src/models/data/courses/course_data.dart';
 import 'package:src/ui/detail_courses/detail_courses.dart';
 import 'package:src/ui/detail_lesson/detail_lesson.dart';
 
 class Course extends StatefulWidget {
-  final CourseModel course;
+  final CourseData course;
   final String type;
 
   const Course(
@@ -53,19 +53,18 @@ class _CourseState extends State<Course> {
                   fit: BoxFit.fill,
                   child: ClipRRect(
                       borderRadius: BorderRadius.circular(30),
-                      child: Image.network(widget.course.imageUrl))),
+                      child: Image.network(widget.course.imageUrl!))),
             ),
             const SizedBox(
               height: 5,
             ),
             Container(
-              padding: const EdgeInsets.only(
-                  left: 20, top: 20, right: 20, bottom: 0),
+              padding: const EdgeInsets.only(left: 20, top: 20, right: 20, bottom: 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.course.name,
+                    widget.course.name!,
                     style: const TextStyle(
                         fontWeight: FontWeight.w500, fontSize: 20),
                   ),
@@ -73,43 +72,43 @@ class _CourseState extends State<Course> {
                     height: 5,
                   ),
                   Text(
-                    widget.course.description,
+                    widget.course.description!,
                     style: const TextStyle(color: Colors.grey),
                   ),
                   const SizedBox(
                     height: 15,
                   ),
                   widget.type == "DetailCourse"
-                      ? Container(
-                          width: double.infinity,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: Colors.blueAccent.shade700,
-                          ),
-                          child: TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          const DetailLesson()),
-                                );
-                              },
-                              child: const Text(
-                                "Discover",
-                                style: TextStyle(color: Colors.white),
-                              )),
-                        )
-                      : Row(
-                          children: [
-                            Text(widget.course.level),
-                            Visibility(
-                                visible: "Course" == widget.type,
-                                child:
-                                    Text(" - ${widget.course.topics.length.toString()} Lessons"))
-                          ],
-                        )
+                    ? Container(
+                        width: double.infinity,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.blueAccent.shade700,
+                        ),
+                        child: TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const DetailLesson()),
+                              );
+                            },
+                            child: const Text(
+                              "Discover",
+                              style: TextStyle(color: Colors.white),
+                            )),
+                      )
+                    : Row(
+                        children: [
+                          Text(widget.course.level!),
+                          Visibility(
+                              visible: "Course" == widget.type,
+                              child:
+                                  Text(" - ${widget.course.topics!.length.toString()} Lessons"))
+                        ],
+                      )
                 ],
               ),
             )

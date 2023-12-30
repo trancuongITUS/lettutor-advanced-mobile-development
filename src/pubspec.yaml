@@ -32,6 +32,8 @@ dependencies:
   json_annotation: ^4.8.1
   cupertino_icons: ^1.0.2
   cached_network_image: ^3.3.0
+  flutter_pagination: ^0.0.8
+  flutter_countdown_timer: ^4.1.0
 
 dev_dependencies:
   flutter_test:
