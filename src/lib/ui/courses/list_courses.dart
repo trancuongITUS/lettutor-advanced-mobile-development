@@ -28,18 +28,6 @@ class _ListCourseState extends State<ListCourse> {
   List<CourseData> coursesData = [];
   Map<String, List<CourseData>> groupedCoursesData = {};
 
-  int getShowPagesBasedOnPages(int pages) {
-    if (pages > 2) {
-      return 2;
-    } else if (pages == 2) {
-      return 1;
-    } else if (pages <= 1) {
-      return 0;
-    } else {
-      return 0;
-    }
-  }
-
   Future<void> callAPIGetCourses(int page, CourseAPI courseAPI, CourseProvider courseProvider, AuthenticationProvider authenticationProvider) async {
     await courseAPI.getCourseListWithPagination(
         accessToken: authenticationProvider.token?.access?.token ?? "",
@@ -61,7 +49,6 @@ class _ListCourseState extends State<ListCourse> {
             coursesData = response;
             hasCalledAPI = true;
             currentPage = page;
-            numberOfShowPages = getShowPagesBasedOnPages((total / 10).ceil());
             isLoading = false;
           });
         },
@@ -81,33 +68,31 @@ class _ListCourseState extends State<ListCourse> {
       callAPIGetCourses(1, CourseAPI(), courseProvider, authenticationProvider);
     }
 
-    return Container(
-      child: !hasCalledAPI
-        ? const Loading()
-        : ListView.builder(
-          physics: const NeverScrollableScrollPhysics(),
-          shrinkWrap: true,
-          itemCount: groupedCoursesData.length,
-          itemBuilder: (context, index) {
-            String type = groupedCoursesData.keys.elementAt(index);
-            List<CourseData> coursesByType = groupedCoursesData[type]!;
+  return !hasCalledAPI
+    ? const Loading()
+    : ListView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      itemCount: groupedCoursesData.length,
+      itemBuilder: (context, index) {
+        String type = groupedCoursesData.keys.elementAt(index);
+        List<CourseData> coursesByType = groupedCoursesData[type]!;
 
-            return Container(
-              margin: const EdgeInsets.only(top: 30),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(type, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500)),
-                  Column(
-                    children: coursesByType.map((course) {
-                      return Course(type: "Course", course: course);
-                    }).toList(),
-                  )
-                ],
-              ),
-            );
-          },
-        ),
+        return Container(
+          margin: const EdgeInsets.only(top: 30),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(type, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500)),
+              Column(
+                children: coursesByType.map((course) {
+                  return Course(type: "Course", course: course);
+                }).toList(),
+              )
+            ],
+          ),
+        );
+      },
     );
   }
 }

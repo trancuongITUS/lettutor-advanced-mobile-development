@@ -47,18 +47,4 @@ class ScheduleDetailData {
           ? null
           : ScheduleData.fromJson(json['scheduleInfo'] as Map<String, dynamic>),
     );
-
-  Map<String, dynamic> toJson() => <String, dynamic>{
-    'startPeriodTimestamp': startPeriodTimestamp,
-    'endPeriodTimestamp': endPeriodTimestamp,
-    'id': id,
-    'scheduleId': scheduleId,
-    'startPeriod': startPeriod,
-    'endPeriod': endPeriod,
-    'createdAt':createdAt,
-    'updatedAt': updatedAt,
-    'bookingInfo': bookingInfo,
-    'isBooked': isBooked,
-    'scheduleInfo': scheduleInfo,
-  };
 }

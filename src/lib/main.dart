@@ -1,18 +1,13 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:src/models/course.dart';
 import 'package:src/models/tutor.dart';
 import 'package:src/provider/authentication_provider.dart';
 import 'package:src/provider/course_provider.dart';
-import 'package:src/repository/favorite_repository.dart';
-import 'package:src/repository/schedule_student_repository.dart';
 import 'package:src/ui/auth/signin_page.dart';
 import 'package:src/ui/courses/courses_page.dart';
-import 'package:src/ui/home/home_page.dart';
 import 'package:src/ui/history/history_page.dart';
+import 'package:src/ui/home/home_page.dart';
 import 'package:src/ui/schedule/schedule_page.dart';
 import 'package:provider/provider.dart';
 import 'package:src/ui/setting/setting_page.dart';
@@ -33,56 +28,8 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   List<TutorModel> tutors = [];
   List<CourseModel> courses = [];
-  final favouriteRepository = FavouriteRepository();
-  final scheduleStudentRepository = ScheduleStudentRepository();
   AuthenticationProvider authenticationProvider = AuthenticationProvider();
   CourseProvider courseProvider = CourseProvider();
-
-  @override
-  void initState() {
-    super.initState();
-    loadTutors();
-    loadCourses();
-  }
-
-  Future<void> loadTutors() async {
-    String jsonString = await rootBundle.loadString('assets/data/dataTutor.json');
-    Map<String, dynamic> jsonData = json.decode(jsonString);
-
-    List<Map<String, dynamic>> tutorList = [];
-    List<Map<String, dynamic>> favoriteList = [];
-
-    if (null != jsonData['tutors'] && jsonData['tutors']['rows'] is List) {
-      tutorList = List<Map<String, dynamic>>.from(jsonData['tutors']['rows']);
-    }
-
-    tutors = tutorList.map((json) => TutorModel.fromJson(json)).toList();
-    if (null != jsonData['tutors'] && jsonData['favoriteTutor'] is List) {
-      favoriteList = List<Map<String, dynamic>>.from(jsonData['favoriteTutor']);
-    }
-
-    List<String> idindex = [];
-    for (var tutor in favoriteList) {
-      String secondId = tutor['secondId'];
-      idindex.add(secondId);
-    }
-
-    setState(() {
-      favouriteRepository.setListIds(idindex);
-    });
-  }
-
-  Future<void> loadCourses() async {
-    String jsonString = await rootBundle.loadString('assets/data/dataCourse.json');
-    Map<String, dynamic> jsonData = json.decode(jsonString);
-
-    List<Map<String, dynamic>> coursesList = [];
-    if (null != jsonData['data'] && jsonData['data']['rows'] is List) {
-      coursesList = List<Map<String, dynamic>>.from(jsonData['data']['rows']);
-    }
-
-    courses = coursesList.map((json) => CourseModel.fromJson(json)).toList();
-  }
 
   Widget getWidgetByState() {
     if (null == authenticationProvider.currentUser) {
@@ -98,8 +45,6 @@ class _MyAppState extends State<MyApp> {
       providers: [
         Provider(create: (context) => tutors),
         Provider(create: (context) => courses),
-        ChangeNotifierProvider(create: (context) => favouriteRepository),
-        ChangeNotifierProvider(create: (context) => scheduleStudentRepository),
         ChangeNotifierProvider(create: (context) => courseProvider)
       ],
       child: MaterialApp(
@@ -131,7 +76,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
   @override
   Widget build(BuildContext context) {
     List<Widget> buildScreens() {
-      return [const HomePage(), const CoursesPage(), const Schedule(), const History(), const SettingPage()];
+      return [const HomePage(), const CoursesPage(), const SchedulePage(), const HistoryPage(), const SettingPage()];
     }
 
     List<PersistentBottomNavBarItem> navBarsItems() {

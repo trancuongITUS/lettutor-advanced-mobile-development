@@ -26,7 +26,7 @@ class DetailTutor extends StatefulWidget {
 class _DetailTutorState extends State<DetailTutor> {
   late TutorData tutor;
   late TutorInfoData tutorInfo;
-  bool hasCalledAPI = false;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -37,26 +37,39 @@ class _DetailTutorState extends State<DetailTutor> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!hasCalledAPI) {
-      callAPIGetTutorById(TutorAPI(), Provider.of<AuthenticationProvider>(context, listen: false), tutor.userId!);
-    }
+    callAPIGetTutorById(TutorAPI(), Provider.of<AuthenticationProvider>(context, listen: false), tutor.userId!);
   }
 
   Future<void> callAPIGetTutorById(TutorAPI tutorAPI, AuthenticationProvider authenticationProvider, String userId) async {
     await tutorAPI.getTutorById(
-        accessToken: authenticationProvider.token?.access?.token ?? "",
-        tutorId: userId,
-        onSuccess: (response) async {
-          setState(() {
-            tutorInfo = response;
-            hasCalledAPI = true;
-          });
-        },
-        onFail: (error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${error.toString()}')),
-          );
+      accessToken: authenticationProvider.token?.access?.token ?? "",
+      tutorId: userId,
+      onSuccess: (response) async {
+        setState(() {
+          tutorInfo = response;
+          isLoading = true;
         });
+      },
+      onFail: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${error.toString()}')),
+        );
+      });
+  }
+
+  Future<void> refreshHome() async {
+    setState(() {
+      isLoading = true;
+    });
+    await Future.wait([
+      callAPIGetTutorById(TutorAPI(), Provider.of<AuthenticationProvider>(context, listen: false), tutor.userId!),
+    ]).whenComplete(() {
+      setState(() {
+        isLoading = false;
+      });
+
+      return Future<void>.delayed(const Duration(seconds: 0));
+    });
   }
 
   List<Widget> generateRatings(double rating) {
@@ -123,7 +136,11 @@ class _DetailTutorState extends State<DetailTutor> {
       ),
       ),
       ),
-      body: !hasCalledAPI ? const Loading() : SingleChildScrollView(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await refreshHome();
+        },
+        child: !isLoading ? const Loading() : SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.all(25),
           child: Column(children: [
@@ -245,9 +262,14 @@ class _DetailTutorState extends State<DetailTutor> {
             ChewieDemo(linkVideo: tutorInfo.video!,),
             InfoDetail(tutorInfo),
             const SizedBox(height: 20),
-            ListReview(tutor.feedbacks!),
+            ListReview(tutor.feedbacks!.sublist(0, 10)),
             const SizedBox(height: 20),
-            const Booking()
-          ]))));
+            Booking(tutor: widget.tutor)
+          ]
+        )
+      )
+    ),
+    )
+    );
   }
 }

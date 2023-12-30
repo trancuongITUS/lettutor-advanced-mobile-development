@@ -4,11 +4,11 @@ import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'package:src/provider/authentication_provider.dart';
 import 'package:src/ui/courses/filter.dart';
+import 'package:src/ui/courses/list_courses.dart';
 import 'package:src/ui/home/home_page.dart';
 import 'package:src/ui/history/history_page.dart';
 
 import '../schedule/schedule_page.dart';
-import 'content.dart';
 
 class CoursesPage extends StatefulWidget {
   const CoursesPage({super.key});
@@ -108,7 +108,7 @@ class _CoursesPageState extends State<CoursesPage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const Schedule()),
+                    MaterialPageRoute(builder: (context) => const SchedulePage()),
                   );
                 },
               ),
@@ -125,7 +125,7 @@ class _CoursesPageState extends State<CoursesPage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const History()),
+                    MaterialPageRoute(builder: (context) => const HistoryPage()),
                   );
                 },
               ),
@@ -190,7 +190,7 @@ class _CoursesPageState extends State<CoursesPage> {
         ),
         body: SingleChildScrollView(
             child: Container(
-          padding: const EdgeInsets.all(30),
+          padding: const EdgeInsets.all(25),
           child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -201,7 +201,9 @@ class _CoursesPageState extends State<CoursesPage> {
               Text(
                   "LiveTutor has built the most quality, methodical and scientific courses in the fields of life for those who are in need of improving their knowledge of the fields."),
               Filter(),
-              Content()
+              SizedBox(height: 20),
+              ListCourse(),
+              SizedBox(height: 10),
             ],
           ),
         )));

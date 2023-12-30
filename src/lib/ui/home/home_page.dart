@@ -6,6 +6,7 @@ import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:flutter_pagination/flutter_pagination.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:src/common/loading.dart';
 import 'package:src/models/data/schedules/booking_info_data.dart';
 import 'package:src/models/data/tutors/tutor_data.dart';
 import 'package:src/provider/authentication_provider.dart';
@@ -15,9 +16,9 @@ import 'package:src/services/tutor_api.dart';
 import 'package:src/styles/style.dart';
 
 import 'package:src/ui/courses/courses_page.dart';
+import 'package:src/ui/history/history_page.dart';
 import 'package:src/ui/home/list_tutors.dart';
 import 'package:src/ui/home/search_tutor.dart';
-import 'package:src/ui/history/history_page.dart';
 import 'package:src/ui/schedule/schedule_page.dart';
 import 'package:src/ui/video_call/video_call_page.dart';
 
@@ -42,7 +43,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   int maxPage = 1;
 
   String totalLessonTime = "";
-  BookingInfoData? upcomingLesson;
+  BookingInfoData upcomingLesson = BookingInfoData();
 
   String specialties = "all";
   String nameTutor = "";
@@ -88,7 +89,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   }
 
   Future<void> callAPIGetScheduleList(BookingAPI bookingAPI, AuthenticationProvider authenticationProvider) async {
-    await bookingAPI.getIncomingLessons(
+    await bookingAPI.getUpcomingClass(
       accessToken: authenticationProvider.token?.access?.token ?? "",
       now: DateTime.now().millisecondsSinceEpoch.toString(),
       page: 1,
@@ -364,7 +365,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const Schedule()),
+                  MaterialPageRoute(builder: (context) => const SchedulePage()),
                 );
               },
             ),
@@ -381,7 +382,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const History()),
+                  MaterialPageRoute(builder: (context) => const HistoryPage()),
                 );
               },
             ),
@@ -447,10 +448,10 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
         onRefresh: () async {
           refreshHomePage(authenticationProvider);
         },
-        child: SingleChildScrollView(
+        child: isLoading ? const Loading() : SingleChildScrollView(
           child: Column(
             children: [
-              UpcomingLesson(upcomingLesson: upcomingLesson!, totalLessonTime: totalLessonTime),
+              (upcomingLesson != null) ? UpcomingLesson(upcomingLesson: upcomingLesson, totalLessonTime: totalLessonTime) : const SizedBox(),
               SearchTutor(filterCallback),
               const Divider(
                 color: Colors.grey,
@@ -518,37 +519,39 @@ class _UpcomingLessonState extends State<UpcomingLesson>{
       child: Column(
         children: [
           Text(
-            widget.upcomingLesson == null
+            widget.upcomingLesson.id == null
                 ? "You have no upcoming lesson."
                 : "Upcoming lesson",
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 22, color: Colors.white),
           ),
           SizedBox(
-            height: widget.upcomingLesson != null ? 20 : 0,
+            height: widget.upcomingLesson.id != null ? 20 : 0,
           ),
           Visibility(
-            visible: widget.upcomingLesson != null,
+            visible: widget.upcomingLesson.id != null,
             child: Row(
               children: [
                 Expanded(
                   flex: 1,
                   child: Column(
                     children: [
+                      (widget.upcomingLesson.scheduleDetailInfo != null) ?
                       Text(
-                        DateFormat('EEEE, MMMM d').format(DateTime.fromMillisecondsSinceEpoch(widget.upcomingLesson != null ? widget.upcomingLesson.scheduleDetailInfo!.startPeriodTimestamp! : 0)),
+                        DateFormat('EEEE, MMMM d').format(DateTime.fromMillisecondsSinceEpoch(widget.upcomingLesson.scheduleDetailInfo!.startPeriodTimestamp!)),
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontSize: 16, color: Colors.white),
-                      ),
+                      ) : const SizedBox(),
                       Text(
                         convertTimeToString(widget.upcomingLesson.scheduleDetailInfo!.startPeriodTimestamp != null ? widget.upcomingLesson.scheduleDetailInfo!.startPeriodTimestamp! : 0, widget.upcomingLesson.scheduleDetailInfo!.endPeriodTimestamp != null ? widget.upcomingLesson.scheduleDetailInfo!.endPeriodTimestamp! : 0),
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontSize: 16, color: Colors.white),
                       ),
+                      (widget.upcomingLesson.scheduleDetailInfo!=null)?
                       CountdownTimer(
                         endTime: widget.upcomingLesson.scheduleDetailInfo!.startPeriodTimestamp!,
                         textStyle: const TextStyle(color: Colors.yellow),
-                      )
+                      ) : const SizedBox(),
                     ],
                   ),
                 ),
@@ -588,13 +591,17 @@ class _UpcomingLessonState extends State<UpcomingLesson>{
           const SizedBox(
             height: 20,
           ),
-          Text(
-            widget.totalLessonTime.isEmpty ? "Total lesson time is 0" : "Total lesson time is: ${widget.totalLessonTime}",
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-            ),
-          ),
+          Visibility(
+            visible: widget.totalLessonTime != null,
+            child: 
+              Text(
+                widget.totalLessonTime.isEmpty ? "Total lesson time is 0" : "Total lesson time is: ${widget.totalLessonTime}",
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+          )
         ],
       ),
     );

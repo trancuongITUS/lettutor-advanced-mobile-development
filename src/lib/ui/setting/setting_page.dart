@@ -112,7 +112,7 @@ class _SettingPageState extends State<SettingPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const Schedule()),
+                      builder: (context) => const SchedulePage()),
                 );
               },
             ),
@@ -130,7 +130,7 @@ class _SettingPageState extends State<SettingPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const History()),
+                      builder: (context) => const HistoryPage()),
                 );
               },
             ),

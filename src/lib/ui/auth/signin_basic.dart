@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:src/models/data/users/token_data.dart';
 import 'package:src/models/data/users/user_data.dart';
 import 'package:src/provider/authentication_provider.dart';
+import 'package:src/ui/auth/forgot_password.dart';
 
 class SignInBasic extends StatefulWidget {
   const SignInBasic({super.key});
@@ -168,10 +169,16 @@ class _SignInBasicState extends State<SignInBasic> {
           ),
           Container(
               margin: const EdgeInsets.only(top: 20),
-              child: const Text(
-                "Forgot Password?",
-                style: TextStyle(color: Colors.blueAccent, fontSize: 16),
-              )),
+              child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ForgotPasswordPage()));
+                  },
+                  child: const Text(
+                    "Forgot Password?",
+                    style: TextStyle(color: Colors.blueAccent, fontSize: 16),
+                  ) 
+              ),
+              ),
           Container(
             width: double.infinity,
             margin: const EdgeInsets.only(top: 5),
