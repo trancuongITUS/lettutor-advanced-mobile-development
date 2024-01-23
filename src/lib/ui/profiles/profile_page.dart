@@ -6,7 +6,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:multiselect/multiselect.dart';
 import 'package:provider/provider.dart';
-import 'package:src/models/user_info.dart';
+import 'package:src/models/data/users/user_data.dart';
+import 'package:src/provider/authentication_provider.dart';
+import 'package:src/services/user_api.dart';
 import 'package:src/ui/profiles/birthday_select_widget.dart';
 import 'package:src/ui/profiles/country_select_widget.dart';
 
@@ -18,7 +20,6 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  late UserInfoModel userData;
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   TextEditingController nameController = TextEditingController();
@@ -29,14 +30,13 @@ class _ProfilePageState extends State<ProfilePage> {
   List<String> countries = ['Vietnam', 'United States', 'Canada', 'Other'];
   String selectedCountry = "Vietnam";
   List<String> itemsLevel = [
-    "Beginner",
-    "Upper-Beginner",
-    "Pre-Intermediate",
-    "Intermediate",
-    "Upper-Intermediate",
-    "Pre-Advanced",
-    "Adva nced",
-    "Very Advanced"
+    "BEGINNER",
+    "HIGHER-BEGINNER",
+    "PRE-INTERMEDIATE",
+    "INTERMEDIATE",
+    "UPPER-INTERMEDIATE",
+    "ADVANCED",
+    "PROFICIENCY"
   ];
   List<String> itemsCategory = [
     'All',
@@ -59,67 +59,13 @@ class _ProfilePageState extends State<ProfilePage> {
   late bool hasInitValue = false;
   XFile? _pickedFile;
 
-  Future<void> changeImage() async {
-    // Show options for image source (camera or gallery)
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return Wrap(
-          children: <Widget>[
-            ListTile(
-              leading: const Icon(Icons.camera),
-              title: const Text('Capture Photo'),
-              onTap: () async {
-                Navigator.pop(context);
-                _captureImage();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Choose from Gallery'),
-              onTap: () async {
-                Navigator.pop(context);
-                _pickImage();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _captureImage() async {
-    final picker = ImagePicker();
-    final XFile? image = await picker.pickImage(
-        source: ImageSource.camera, maxWidth: 1800, maxHeight: 1800);
+  void initValues(UserData userData) {
     setState(() {
-      _pickedFile = image;
-    });
-    if (_pickedFile != null) {
-      String newImageUrl = _pickedFile!.path;
-    }
-  }
-
-  Future<void> _pickImage() async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? image = await _picker.pickImage(
-        source: ImageSource.gallery, maxWidth: 1800, maxHeight: 1800);
-    setState(() {
-      _pickedFile = image;
-    });
-
-    if (_pickedFile != null) {
-      String newImageUrl = _pickedFile!.path;
-    }
-  }
-
-  void initValues(UserInfoModel userData) {
-    setState(() {
-      nameController.text = userData.name;
-      emailController.text = userData.email;
-      phoneController.text = userData.phone;
-      studyScheduleController.text = userData.studySchedule;
-      String country = userData.country;
+      nameController.text = userData.name ?? "";
+      emailController.text = userData.email ?? "";
+      phoneController.text = userData.phone ?? "";
+      studyScheduleController.text = userData.studySchedule ?? "";
+      String country = userData.country ?? "";
       bool check = false;
       for (var element in countries) {
         if (element.toLowerCase() == country.toLowerCase()) {
@@ -128,15 +74,15 @@ class _ProfilePageState extends State<ProfilePage> {
           break;
         }
       }
+
       if (check == false) {
         setState(() {
           countries.add(country);
         });
       }
-      selectedDate =
-          DateTime.parse(userData.birthday ?? DateTime.now().toString());
 
-      String level = userData.level;
+      selectedDate = DateTime.parse(userData.birthday ?? DateTime.now().toString());
+      String level = userData.level ?? "";
       check = false;
       for (var element in itemsLevel) {
         if (element.toLowerCase().compareTo(level.toLowerCase()) == 0) {
@@ -150,17 +96,90 @@ class _ProfilePageState extends State<ProfilePage> {
           itemsLevel.add(level);
         });
       }
+
+      check = false;
+      userData.learnTopics?.forEach((element) {
+        selectedCategory.add(element.key!.toUpperCase());
+      });
+      for (var itemCategory in itemsCategory) {
+        userData.learnTopics?.forEach((learnTopic) {
+          if (learnTopic.key?.toString().compareTo(itemCategory.toLowerCase()) != null) {
+            check == true;
+
+            setState(() {
+              itemsCategory.add(learnTopic.key!.toUpperCase().toString());
+            });
+          }
+        });
+      }
+
       hasInitValue = true;
     });
   }
 
+  _getFromGallery(AuthenticationProvider authProvider) async {
+    XFile? pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1800,
+      maxHeight: 1800,
+    );
+    if (pickedFile != null) {
+      callAPIUpdateAvatar(UserAPI(), authProvider, pickedFile.path);
+    }
+  }
+
+  Future<void> callAPIUpdateAvatar(UserAPI userAPI, AuthenticationProvider authProvider, String avatar) async {
+    await userAPI.uploadAvatar(
+      accessToken: authProvider.token?.access?.token ?? "",
+      imagePath: avatar,
+      onSuccess: (user) async {
+        authProvider.saveLoginInfo(user, authProvider.token);
+        initValues(authProvider.currentUser!);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile updated successfully')),
+        );
+      },
+      onFail: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${error.toString()}')),
+        );
+      });
+  }
+
+  Future<void> callAPIUpdateProfile(UserAPI userAPI, AuthenticationProvider authProvider) async {
+    await userAPI.updateInfoUser(
+        accessToken: authProvider.token?.access?.token ?? "",
+        input: UserData(
+            name: nameController.text,
+            phone: phoneController.text,
+            country: selectedCountry,
+            birthday: DateFormat('yyyy-MM-dd').format(selectedDate),
+            level: selectedLevel,
+            learnTopics: authProvider.currentUser?.learnTopics!,
+            testPreparations: authProvider.currentUser?.testPreparations!,
+            studySchedule:studyScheduleController.text
+          ),
+        onSuccess: (user) async {
+          authProvider.saveLoginInfo(user, authProvider.token);
+          initValues(authProvider.currentUser!);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile updated successfully',style: TextStyle(color: Colors.white),),backgroundColor: Colors.green,),
+          );
+        },
+        onFail: (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${error.toString()}')),
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
-    userData = context.watch<UserInfoModel>();
-
+    var authenticationProvider = Provider.of<AuthenticationProvider>(context, listen: false);
     if (hasInitValue == false) {
-      initValues(userData);
+      initValues(authenticationProvider.currentUser!);
     }
+
     return Scaffold(
       appBar: PreferredSize(
         preferredSize:
@@ -230,7 +249,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               image: _pickedFile != null
                                   ? FileImage(File(_pickedFile!.path))
                                       as ImageProvider<Object>
-                                  : NetworkImage(userData.avatar ??
+                                  : NetworkImage(authenticationProvider.currentUser?.avatar ??
                                       "https://sandbox.api.lettutor.com/avatar/f569c202-7bbf-4620-af77-ecc1419a6b28avatar1700296337596.jpg"))),
                     ),
                     Positioned(
@@ -238,7 +257,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       right: 0,
                       child: GestureDetector(
                         onTap: () {
-                          changeImage();
+                          _getFromGallery(authenticationProvider);
                         },
                         child: Container(
                           height: 40,
@@ -264,7 +283,7 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(height: 10),
               Center(
                 child: Text(
-                  userData?.name ?? "Anonymous",
+                  authenticationProvider.currentUser?.name ?? "Anonymous",
                   style: const TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w500,
@@ -272,32 +291,30 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               const SizedBox(height: 10),
-              Center(child: _buildInfo("Account ID: ", userData.id)),
+              Center(child: _buildInfo("Account ID: ", authenticationProvider.currentUser?.id! ?? "")),
               const SizedBox(height: 10),
               Center(
                   child: GestureDetector(
                 onTap: () {},
-                child: Container(
-                    child: const Text(
-                  "Others review you",
-                  style: TextStyle(fontSize: 14, color: Colors.blue),
-                )),
+                child: const Text(
+                                  "Others review you",
+                                  style: TextStyle(fontSize: 14, color: Colors.blue),
+                                ),
               )),
               const SizedBox(height: 10),
               Center(
                   child: GestureDetector(
                 onTap: () {},
-                child: Container(
-                    child: const Text(
-                  "Change Password",
-                  style: TextStyle(fontSize: 14, color: Colors.blue),
-                )),
+                child: const Text(
+                                  "Change Password",
+                                  style: TextStyle(fontSize: 14, color: Colors.blue),
+                                ),
               )),
               const SizedBox(height: 40),
               Container(
                 width: double.infinity,
                 color: Colors.grey.shade200,
-                padding: EdgeInsets.all(15),
+                padding: const EdgeInsets.all(15),
                 child: const Text(
                   "Account",
                   style: TextStyle(
@@ -306,7 +323,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
               ),
-              _buildForm(userData),
+              _buildForm(authenticationProvider.currentUser!),
             ],
           ),
         ),
@@ -314,7 +331,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildForm(UserInfoModel userData) {
+  Widget _buildForm(UserData userData) {
     return Container(
       margin: const EdgeInsets.all(20),
       child: Form(
@@ -413,22 +430,8 @@ class _ProfilePageState extends State<ProfilePage> {
     return ElevatedButton(
       onPressed: () {
         if (_formKey.currentState!.validate()) {
-          UserInfoModel updatedUser = userData;
-          updatedUser.name = nameController.text;
-          updatedUser.country = selectedCountry;
-          updatedUser.birthday = DateFormat('yyyy-MM-dd').format(selectedDate);
-          updatedUser.level = selectedLevel;
-          updatedUser.studySchedule = studyScheduleController.text;
-          userData.updateData(updatedUser);
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Update successful!.'),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-              duration: Duration(seconds: 2),
-            ),
-          );
+          var authenticationProvider = Provider.of<AuthenticationProvider>(context, listen: false);
+          callAPIUpdateProfile(UserAPI(), authenticationProvider);
         }
       },
       style: ElevatedButton.styleFrom(
@@ -447,19 +450,19 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildInfo(String title, String content) {
     return Container(
       alignment: Alignment.center,
-      margin: EdgeInsets.only(top: 10),
+      margin: const EdgeInsets.only(top: 10),
       child: Wrap(
         children: [
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
           ),
           Text(
             content,
-            style: TextStyle(fontSize: 16, color: Colors.grey),
+            style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
         ],
       ),
@@ -469,11 +472,8 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildInputField(TextEditingController controller, String hintText,
       {isPassword = false, Function? validator}) {
     return TextFormField(
-      // validator: (value) {
-      //   return validator!(value ?? "");
-      // },
       controller: controller,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 14,
       ),
       decoration: InputDecoration(
@@ -481,9 +481,9 @@ class _ProfilePageState extends State<ProfilePage> {
             borderRadius: BorderRadius.all(Radius.circular(8.0))),
         hintText: hintText,
         hintStyle: TextStyle(color: Colors.grey.shade400),
-        isDense: true, // Added this
-        contentPadding: EdgeInsets.all(12),
-        suffixIcon: isPassword ? Icon(Icons.remove_red_eye) : null,
+        isDense: true,
+        contentPadding: const EdgeInsets.all(12),
+        suffixIcon: isPassword ? const Icon(Icons.remove_red_eye) : null,
       ),
       obscureText: isPassword,
     );

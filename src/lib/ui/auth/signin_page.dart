@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
-import 'package:src/main.dart';
 import 'package:src/ui/auth/signin_basic.dart';
 import 'package:src/ui/auth/signup_page.dart';
 import 'package:toastification/toastification.dart';
 
 class SignIn extends StatelessWidget {
-  final SignInCallback callback;
-
-  const SignIn(this.callback, {super.key});
+  const SignIn({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +77,7 @@ class SignIn extends StatelessWidget {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SignInBasic(callback),
+                const SignInBasic(),
                 Container(
                     margin: const EdgeInsets.only(top: 30),
                     child: const Text("Or continue with")),

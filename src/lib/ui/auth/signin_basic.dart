@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:src/main.dart';
-import 'package:src/models/user.dart';
+import 'package:src/models/data/users/token_data.dart';
+import 'package:src/models/data/users/user_data.dart';
+import 'package:src/provider/authentication_provider.dart';
+import 'package:src/ui/auth/forgot_password.dart';
 
 class SignInBasic extends StatefulWidget {
-  final SignInCallback callback;
-
-  const SignInBasic(this.callback, {super.key});
+  const SignInBasic({super.key});
 
   @override
   State<SignInBasic> createState() => _SignInBasicState();
@@ -23,7 +23,6 @@ class _SignInBasicState extends State<SignInBasic> {
 
   @override
   Widget build(BuildContext context) {
-    UserModel user = context.watch<UserModel>();
     return Container(
       margin: const EdgeInsets.only(top: 30),
       child: Column(
@@ -170,28 +169,35 @@ class _SignInBasicState extends State<SignInBasic> {
           ),
           Container(
               margin: const EdgeInsets.only(top: 20),
-              child: const Text(
-                "Forgot Password?",
-                style: TextStyle(color: Colors.blueAccent, fontSize: 16),
-              )),
+              child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ForgotPasswordPage()));
+                  },
+                  child: const Text(
+                    "Forgot Password?",
+                    style: TextStyle(color: Colors.blueAccent, fontSize: 16),
+                  ) 
+              ),
+              ),
           Container(
             width: double.infinity,
             margin: const EdgeInsets.only(top: 5),
             child: TextButton(
                 onPressed: () {
-                  if(errorEmail && "" != emailController.text && "" != passwordController.text) {
-                    if(emailController.text == user.email && passwordController.text == user.password)
-                    {
-                      setState(() {
-                        isSignInSuccess = true;
-                      });
-                      widget.callback(1);
-                    }
-                    else{
-                      setState(() {
-                        isSignInSuccess = false;
-                      });
-                    }
+                  if (errorEmail && "" != emailController.text && "" != passwordController.text) {
+                    var authenticationProvider = Provider.of<AuthenticationProvider>(context, listen: false);
+                    authenticationProvider.authenticationAPI.loginByAccount(
+                      email: emailController.text,
+                      password: passwordController.text,
+                      onSuccess: (UserData userData, TokenData tokenData) {
+                        authenticationProvider.saveLoginInfo(userData, tokenData);
+                      },
+                      onFail: (String error) {
+                        setState(() {
+                          isSignInSuccess = false;
+                        });
+                      }
+                    );
                   }
                 },
                 style: ButtonStyle(

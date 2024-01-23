@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:src/ui/courses/course.dart';
 
 class ListBook extends StatefulWidget {
   const ListBook({super.key});

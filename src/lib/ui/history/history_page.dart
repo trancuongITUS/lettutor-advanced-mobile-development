@@ -2,21 +2,68 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
-import 'package:src/main.dart';
-import 'package:src/repository/schedule_student_repository.dart';
+import 'package:src/common/loading.dart';
+import 'package:src/models/data/schedules/booking_info_data.dart';
+import 'package:src/provider/authentication_provider.dart';
+import 'package:src/services/booking_api.dart';
 import 'package:src/ui/home/home_page.dart';
 import 'package:src/ui/session_widget/session.dart';
 
 import '../courses/courses_page.dart';
 import '../schedule/schedule_page.dart';
 
-class History extends StatelessWidget {
-  final SignInCallback signInCallback;
-  const History(this.signInCallback, {super.key});
+class HistoryPage extends StatefulWidget {
+  const HistoryPage({super.key});
+
+  @override
+  State<HistoryPage> createState() => _HistorypageState();
+}
+
+class _HistorypageState extends State<HistoryPage> {
+  List<BookingInfoData> historyLessons = [];
+  bool hasCalledAPI = false;
+  bool isLoading = true;
+  int currentPage = 1;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    AuthenticationProvider authenticationProvider = Provider.of<AuthenticationProvider>(context, listen: false);
+
+    if (!hasCalledAPI) {
+      callAPIGetHistoryLessons(1, BookingAPI(), authenticationProvider);
+    }
+  }
+
+  Future<void> callAPIGetHistoryLessons(int page, BookingAPI bookingAPI, AuthenticationProvider authenticationProvider) async {
+    await bookingAPI.getHistoryLesson(
+        accessToken: authenticationProvider.token?.access?.token ?? "",
+        page: page,
+        perPage: 20,
+        now: DateTime.now().millisecondsSinceEpoch.toString(),
+        onSuccess: (response, total) async {
+          historyLessons = [];
+          for (var value in response) {
+            if (value.isDeleted != true) {
+              historyLessons.add(value);
+            }
+          }
+          setState(() {
+            isLoading = false;
+            hasCalledAPI = true;
+          });
+
+          currentPage = page;
+        },
+        onFail: (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${error.toString()}')),
+          );
+        });
+  }
 
   @override
   Widget build(BuildContext context) {
-    ScheduleStudentRepository scheduleStudentRepository = context.watch<ScheduleStudentRepository>();
     return Scaffold(
         endDrawer: Drawer(
           child: ListView(
@@ -71,7 +118,7 @@ class History extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => HomePage(signInCallback)),
+                    MaterialPageRoute(builder: (context) => const HomePage()),
                   );
                 },
               ),
@@ -88,7 +135,7 @@ class History extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => CoursesPage(signInCallback)),
+                    MaterialPageRoute(builder: (context) => const CoursesPage()),
                   );
                 },
               ),
@@ -105,7 +152,7 @@ class History extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => Schedule(signInCallback)),
+                    MaterialPageRoute(builder: (context) => const SchedulePage()),
                   );
                 },
               ),
@@ -122,7 +169,7 @@ class History extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => History(signInCallback)),
+                    MaterialPageRoute(builder: (context) => const HistoryPage()),
                   );
                 },
               ),
@@ -135,7 +182,10 @@ class History extends StatelessWidget {
                 title: const Text('Logout',
                     style:
                         TextStyle(fontWeight: FontWeight.w500, fontSize: 17)),
-                onTap: () {},
+                onTap: () {
+                  var authenticationProvider = Provider.of<AuthenticationProvider>(context, listen: false);
+                  authenticationProvider.clearUserInfo();
+                },
               ),
             ],
           ),
@@ -182,7 +232,7 @@ class History extends StatelessWidget {
                 )),
           ),
         ),
-        body: SingleChildScrollView(
+        body: isLoading ? const Loading() : SingleChildScrollView(
           child: Container(
             padding: const EdgeInsets.all(25),
             child: Column(
@@ -223,12 +273,13 @@ class History extends StatelessWidget {
                   const SizedBox(
                     height: 10,
                   ),
-                  ListView(
+                  ListView.builder(
                     physics: const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
-                    children: [
-                      // Session(typeSession: "History", schedule: scheduleStudentRepository.scheduleStudent[0]),
-                    ],
+                    itemCount: historyLessons.length,
+                    itemBuilder: (context, index) {
+                      return Session(schedule: historyLessons[index], typeSession: "History");
+                    },
                   ),
                 ]),
           ),

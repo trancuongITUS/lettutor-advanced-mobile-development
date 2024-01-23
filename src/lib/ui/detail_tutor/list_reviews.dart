@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
-import 'package:src/models/feedback.dart';
+import 'package:src/models/data/tutors/tutor_feedback_data.dart';
 import 'package:src/ui/detail_tutor/review.dart';
 
 class ListReview extends StatelessWidget {
-  final List<FeedbackModel> feedbacks;
+  final List<TutorFeedbackData> feedbacks;
   const ListReview(this.feedbacks, {super.key});
 
   @override

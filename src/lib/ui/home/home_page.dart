@@ -2,25 +2,31 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
+import 'package:flutter_pagination/flutter_pagination.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:src/main.dart';
-import 'package:src/models/schedule.dart';
-import 'package:src/models/tutor.dart';
-import 'package:src/repository/schedule_student_repository.dart';
+import 'package:src/common/loading.dart';
+import 'package:src/models/data/schedules/booking_info_data.dart';
+import 'package:src/models/data/tutors/tutor_data.dart';
+import 'package:src/provider/authentication_provider.dart';
+import 'package:src/responses/get_list_tutors_response.dart';
+import 'package:src/services/booking_api.dart';
+import 'package:src/services/tutor_api.dart';
+import 'package:src/styles/style.dart';
 
 import 'package:src/ui/courses/courses_page.dart';
+import 'package:src/ui/history/history_page.dart';
 import 'package:src/ui/home/list_tutors.dart';
 import 'package:src/ui/home/search_tutor.dart';
-import 'package:src/ui/history/history_page.dart';
 import 'package:src/ui/schedule/schedule_page.dart';
 import 'package:src/ui/video_call/video_call_page.dart';
 
 typedef FilterCallback = void Function(String filter, String nameTutor, List<String> nations);
+typedef ChangeFavoriteCallback = void Function(String tutorId);
 
 class HomePage extends StatefulWidget {
-  final SignInCallback signInCallback;
-  const HomePage(this.signInCallback, {super.key});
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -28,87 +34,248 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
 
-  List<TutorModel> tutorsResult = [];
-  List<TutorModel> tutors = [];
+  List<TutorData> _tutors = [];
+  List<BookingInfoData> _lessons = [];
+  List<String> _favoriteTutorIds = [];
+  bool isLoading = true;
+  bool hasCalledAPI = false;
+  int currentPage = 1;
+  int maxPage = 1;
+
+  String totalLessonTime = "";
+  BookingInfoData upcomingLesson = BookingInfoData();
+
+  String specialties = "all";
+  String nameTutor = "";
+  Map<String, dynamic> national = {};
 
   @override
   bool get wantKeepAlive => true;
 
   @override
-  void initState() {
-    super.initState();
+  Future<void> didChangeDependencies() async {
+    super.didChangeDependencies();
+    var authenticationProvider = Provider.of<AuthenticationProvider>(context);
 
-    Future.delayed(Duration.zero, () {
-      filterCallback("All", "", []);
+    if (hasCalledAPI) {
+      await Future.wait([
+          callAPIGetTutorList(1, TutorAPI(), authenticationProvider),
+          callAPIGetScheduleList(BookingAPI(), authenticationProvider)
+        ]).whenComplete(() => {
+        if (mounted) {
+          setState(() {
+            hasCalledAPI = true;
+            isLoading = false;
+          })
+        }
+      });
+    }
+  }
+
+  Future<void> callAPIGetTutorList(int pageIndex, TutorAPI tutorAPI, AuthenticationProvider authenticationProvider) async {
+    await tutorAPI.getListTutor(
+      accessToken: authenticationProvider.token?.access?.token ?? "",
+      perPage: 10,
+      page: pageIndex,
+      onSuccess: (response) async {
+        handleTutorsFromAPI(response);
+      },
+      onFail: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${error.toString()}')),
+        );
+      }
+    );
+  }
+
+  Future<void> callAPIGetScheduleList(BookingAPI bookingAPI, AuthenticationProvider authenticationProvider) async {
+    await bookingAPI.getUpcomingClass(
+      accessToken: authenticationProvider.token?.access?.token ?? "",
+      now: DateTime.now().millisecondsSinceEpoch.toString(),
+      page: 1,
+      perPage: 100000,
+      onSuccess: (response, total) async {
+        handleSchedulesFromAPI(response);
+      },
+      onFail: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${error.toString()}')),
+        );
+      }
+    );
+  }
+
+  void handleTutorsFromAPI(GetListTutorsResponse response) {
+    response.favoriteTutor?.forEach((element) {
+      if (element.secondId != null) {
+        _favoriteTutorIds.add(element.secondId!);
+      }
+    });
+
+    List<TutorData> noneFavoriteTutors = [];
+    List<TutorData> favoriteTutors = [];
+    response.tutors?.rows?.forEach((element) {
+      if (isFavoriteTutor(element)) {
+        favoriteTutors.add(element);
+      } else {
+        noneFavoriteTutors.add(element);
+      }
+    });
+
+    favoriteTutors.sort((b, a) => (a.rating ?? 0).compareTo((b.rating ?? 0)));
+    noneFavoriteTutors.sort((b, a) => (a.rating ?? 0).compareTo((b.rating ?? 0)));
+
+    _tutors.addAll(favoriteTutors);
+    _tutors.addAll(noneFavoriteTutors);
+  }
+
+  void handleSchedulesFromAPI(List<BookingInfoData> response) {
+    for (var value in response) {
+      if (value.isDeleted != true) {
+        _lessons.insert(0, value);
+      }
+    }
+
+    DateTime totalTime = DateTime.now();
+    DateTime nowTime = DateTime.now();
+    for (var element in _lessons) {
+      DateTime startTime = DateTime.fromMillisecondsSinceEpoch(element.scheduleDetailInfo?.startPeriodTimestamp ?? 0);
+      DateTime endTime = DateTime.fromMillisecondsSinceEpoch(element.scheduleDetailInfo?.endPeriodTimestamp ?? 0);
+
+      var learningTime = endTime.difference(startTime);
+      totalTime = totalTime.add(learningTime);
+    }
+
+    Duration learningDuration = totalTime.difference(nowTime);
+    if (_lessons.isNotEmpty) {
+      upcomingLesson = _lessons.first;
+      totalLessonTime = getStringDuration(learningDuration);
+    }
+  }
+
+  String getStringDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
+
+    return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
+  }
+
+  int getShowPagesBasedOnPages(int pages) {
+    if (pages > 2) {
+      return 2;
+    } else if (pages == 2) {
+      return 1;
+    } else if (pages <= 1) {
+      return 0;
+    } else {
+      return 0;
+    }
+  }
+
+  Future<void> searchTutor(int pageIndex, TutorAPI tutorAPI, AuthenticationProvider authenticationProvider, String filter, String name, Map<String, dynamic> nationality) async {
+    await tutorAPI.searchTutor(
+      accessToken: authenticationProvider.token?.access?.token ?? "",
+      searchKeys: name,
+      page: pageIndex,
+      speciality: [filter],
+      nationality: nationality,
+      onSuccess: (response, total) async {
+        _tutors = [];
+        _tutors.addAll(response);
+        setState(() {
+          isLoading = false;
+          currentPage = pageIndex;
+          maxPage = (total / 10).ceil();
+        });
+      },
+      onFail: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${error.toString()}')),
+        );
+      }
+    );
+  }
+
+  bool isFavoriteTutor(TutorData tutorData) {
+    for (var element in _favoriteTutorIds) {
+      if (element == tutorData.userId) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  Future<void> refreshHomePage(AuthenticationProvider authenticationProvider) async {
+    setState(() {
+      _tutors = [];
+      _favoriteTutorIds = [];
+      _lessons = [];
+      isLoading = true;
+    });
+
+    await Future.wait([
+        callAPIGetTutorList(1, TutorAPI(), authenticationProvider),
+        callAPIGetScheduleList(BookingAPI(), authenticationProvider)
+      ]).whenComplete(() {
+      setState(() {
+        isLoading = false;
+      });
+
+      return Future<void>.delayed(const Duration(seconds: 0));
     });
   }
 
-  void filterCallback(String filter, String nameTutor, List<String> nations) {
-    List<TutorModel> temp = [];
-    if (filter == "All") {
-      temp = tutors;
+  void changeFavoriteCallback(String tutorId) {
+    List<String> favorites = _favoriteTutorIds;
+    if (favorites.contains(tutorId)) {
+      favorites.remove(tutorId);
     } else {
-      temp = tutors.where((tutor) => tutor.specialties.contains(filter)).toList();
+      favorites.add(tutorId);
+      favorites = favorites.toSet().toList();
     }
-
-    if (nations.isNotEmpty) {
-      List<TutorModel> filterByNation = [];
-      for (var element in nations) {
-        if ("Foreign Tutor" == element) {
-          filterByNation = filterByNation + temp.where((tutor) => !tutor.country.contains("US") && !tutor.country.contains("Vietnam")).toList();
-        } else if ("Vietnamese Tutor" == element) {
-          filterByNation = filterByNation + temp.where((tutor) => tutor.country.contains("Vietnam")).toList();
-        } else if ("Native English Tutor" == element) {
-          filterByNation = filterByNation + temp.where((tutor) => tutor.country.contains("US") || tutor.country.contains("England")).toList();
-        }
-      }
-
-      temp = temp.where((tutor) => tutor.name.toLowerCase().contains(nameTutor.toLowerCase())).toList();
-
-      setState(() {
-        tutorsResult = temp;
-      });
-    }
-  }
-
-  void filterByNationCallback(List<String> nation) {
-    List<TutorModel> temp=[];
-    if(nation.isNotEmpty) {
-      for (var element in nation) {
-        if ("Foreign Tutor" == element) {
-          temp = temp + tutors
-            .where((tutor) => !tutor.country.contains("US") && !tutor.country.contains("England") && !tutor.country.contains("Vietnam"))
-            .toList();
-        } else if ("Vietnamese Tutor" == element) {
-          temp = temp + tutors
-            .where((tutor) => tutor.country.contains("Vietnam"))
-            .toList();
-        } else if (element=="Native English Tutor") {
-          temp = temp + tutors
-            .where((tutor) => tutor.country.contains("US") || tutor.country.contains("England"))
-            .toList();
-        }
-      }
-      setState(() {
-        tutorsResult = temp;
-      });
-    }
-  }
-
-  void filterByNameCallback(String name) {
-      setState(() {
-        tutorsResult = tutors
-          .where((tutor) => tutor.name.toLowerCase().contains(name.toLowerCase()))
-          .toList();
-      }
-    );
+    
+    setState(() {
+      _favoriteTutorIds = favorites;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    tutors = context.watch<List<TutorModel>>();
-    ScheduleStudentRepository scheduleStudentRepository = context.watch<ScheduleStudentRepository>();
+    var authenticationProvider = Provider.of<AuthenticationProvider>(context);
+
+    void filterCallback(String filter, String tutorName, List<String> nations) {
+      Map<String, dynamic> nationality = {
+        "isVietnamese": false,
+        "isNative": false,
+      };
+
+      if (nations.isEmpty || 3 == nations.length) {
+        nationality = {};
+      } else {
+        for (var nation in nations) {
+          switch (nation) {
+            case "Vietnamese Tutor":
+              nationality["isVietnamese"] = true;
+              break;
+            case "Native English Tutor":
+              nationality["isNative"] = true;
+              break;
+          }
+        }
+      }
+      nationality.removeWhere((key, value) => true == value);
+
+      setState(() {
+        specialties = filter;
+        nameTutor = tutorName;
+        national = nationality;
+      });
+
+      searchTutor(currentPage, TutorAPI(), authenticationProvider, "all" == filter ? "" : filter, nameTutor, nationality);
+    }
     
     return Scaffold(
       endDrawer: Drawer(
@@ -164,7 +331,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => HomePage(widget.signInCallback)),
+                  MaterialPageRoute(builder: (context) => const HomePage()),
                 );
               },
             ),
@@ -181,7 +348,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => CoursesPage(widget.signInCallback)),
+                  MaterialPageRoute(builder: (context) => const CoursesPage()),
                 );
               },
             ),
@@ -198,7 +365,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => Schedule(widget.signInCallback)),
+                  MaterialPageRoute(builder: (context) => const SchedulePage()),
                 );
               },
             ),
@@ -215,7 +382,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => History(widget.signInCallback)),
+                  MaterialPageRoute(builder: (context) => const HistoryPage()),
                 );
               },
             ),
@@ -227,7 +394,10 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
               ),
               title: const Text('Logout',
                   style: TextStyle(fontWeight: FontWeight.w500, fontSize: 17)),
-              onTap: () {},
+              onTap: () {
+                var authenticationProvider = Provider.of<AuthenticationProvider>(context, listen: false);
+                authenticationProvider.clearUserInfo();
+              },
             ),
           ],
         ),
@@ -274,127 +444,64 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
               )),
         ),
       ),
-      body: SingleChildScrollView(
-          child: Column(children: [
-        UpcomingLesson(scheduleStudentRepository: scheduleStudentRepository,),
-        SearchTutor(filterCallback),
-        const Divider(
-          color: Colors.grey,
-          height: 10,
-          thickness: 0.5,
-          indent: 20,
-          endIndent: 10,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          refreshHomePage(authenticationProvider);
+        },
+        child: isLoading ? const Loading() : SingleChildScrollView(
+          child: Column(
+            children: [
+              (upcomingLesson != null) ? UpcomingLesson(upcomingLesson: upcomingLesson, totalLessonTime: totalLessonTime) : const SizedBox(),
+              SearchTutor(filterCallback),
+              const Divider(
+                color: Colors.grey,
+                height: 10,
+                thickness: 0.5,
+                indent: 20,
+                endIndent: 10,
+              ),
+              ListTutors(_tutors, _favoriteTutorIds, changeFavoriteCallback),
+              Container(
+                alignment: Alignment.center,
+                padding: const EdgeInsets.all(16),
+                child: Pagination(
+                  paginateButtonStyles: paginationStyle(context),
+                  prevButtonStyles: prevButtonStyles(context),
+                  nextButtonStyles: nextButtonStyles(context),
+                  onPageChange: (pageIndex) {
+                    setState(() {
+                      isLoading = true;
+                      currentPage = pageIndex;
+                    });
+                    searchTutor(pageIndex, TutorAPI(), authenticationProvider, specialties, nameTutor, national);
+                  },
+                  useGroup: false,
+                  totalPage: maxPage,
+                  show: maxPage - 1,
+                  currentPage: currentPage,
+                ),
+              )
+            ],
+          ),
         ),
-        ListTutors(tutorsResult),
-      ])),
+      ),
     );
   }
 }
 
 class UpcomingLesson extends StatefulWidget {
-  final ScheduleStudentRepository scheduleStudentRepository;
-  const UpcomingLesson({required this.scheduleStudentRepository, super.key});
+  final BookingInfoData upcomingLesson;
+  final String totalLessonTime;
+  const UpcomingLesson({required this.upcomingLesson, required this.totalLessonTime, super.key});
 
   @override
   State<UpcomingLesson> createState() => _UpcomingLessonState();
 }
 
-class _UpcomingLessonState extends State<UpcomingLesson> with AutomaticKeepAliveClientMixin {
-
-  @override
-  bool get wantKeepAlive => true;
-
-  int? timestamp;
-  int? endstamp;
-  late DateTime targetTime;
-  late Timer countdownTimer;
-  late Duration remainingTime = Duration.zero;
-
-  ScheduleModel? upcomingLesson;
-
-  bool compareTime(int time1, int time2) {
-    DateTime dateTime1 = DateTime.fromMillisecondsSinceEpoch(time1);
-    DateTime dateTime2 = DateTime.fromMillisecondsSinceEpoch(time2);
-
-    DateTime now = DateTime.now();
-
-    Duration difference1 = dateTime1.difference(now).abs();
-    Duration difference2 = dateTime2.difference(now).abs();
-
-    if (difference1 < difference2) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    if (widget.scheduleStudentRepository.scheduleStudent.isNotEmpty) {
-      upcomingLesson = widget.scheduleStudentRepository.scheduleStudent.reduce(
-        (current, schedule) =>
-          compareTime(schedule.startTimestamp, current.startTimestamp)
-            ? schedule
-            : current);
-      timestamp = upcomingLesson?.startTimestamp;
-      endstamp = upcomingLesson?.endTimestamp;
-      targetTime = DateTime.fromMillisecondsSinceEpoch(timestamp!);
-
-      DateTime now = DateTime.now();
-      remainingTime =
-          targetTime.isAfter(now) ? targetTime.difference(now) : Duration.zero;
-      
-      countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-        updateRemainingTime();
-        if (remainingTime <= Duration.zero) {
-          timer.cancel();
-        }
-      });
-    }
-  }
-
-  void updateRemainingTime() {
-    DateTime now = DateTime.now();
-    setState(() {
-      remainingTime =
-          targetTime.isAfter(now) ? targetTime.difference(now) : Duration.zero;
-    });
-  }
-
-  void startCountdown() {
-    countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        updateRemainingTime();
-      });
-
-      if (remainingTime <= Duration.zero) {
-        timer.cancel();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    countdownTimer.cancel();
-    super.dispose();
-  }
-  
+class _UpcomingLessonState extends State<UpcomingLesson>{
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     Color backgroundColor = const Color.fromARGB(255, 12, 61, 223);
-    int hours = 0;
-    int minutes = 0;
-    int seconds = 0;
-
-    if (widget.scheduleStudentRepository.scheduleStudent.isNotEmpty) {
-      hours = remainingTime.inHours;
-      minutes = (remainingTime.inMinutes % 60);
-      seconds = (remainingTime.inSeconds % 60);
-    }
-
     String convertTimeToString(int time1, int time2) {
       DateTime timeStart = DateTime.fromMillisecondsSinceEpoch(time1);
       DateTime timeEnd = DateTime.fromMillisecondsSinceEpoch(time2);
@@ -412,38 +519,39 @@ class _UpcomingLessonState extends State<UpcomingLesson> with AutomaticKeepAlive
       child: Column(
         children: [
           Text(
-            widget.scheduleStudentRepository.scheduleStudent.isEmpty
+            widget.upcomingLesson.id == null
                 ? "You have no upcoming lesson."
                 : "Upcoming lesson",
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 22, color: Colors.white),
           ),
           SizedBox(
-            height: widget.scheduleStudentRepository.scheduleStudent.isEmpty ? 20 : 0,
+            height: widget.upcomingLesson.id != null ? 20 : 0,
           ),
           Visibility(
-            visible: widget.scheduleStudentRepository.scheduleStudent.isNotEmpty,
+            visible: widget.upcomingLesson.id != null,
             child: Row(
               children: [
                 Expanded(
                   flex: 1,
                   child: Column(
                     children: [
+                      (widget.upcomingLesson.scheduleDetailInfo != null) ?
                       Text(
-                        DateFormat('EEEE, MMMM d').format(DateTime.fromMillisecondsSinceEpoch(timestamp != null ? timestamp! : 0)),
+                        DateFormat('EEEE, MMMM d').format(DateTime.fromMillisecondsSinceEpoch(widget.upcomingLesson.scheduleDetailInfo!.startPeriodTimestamp!)),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 16, color: Colors.white),
+                      ) : const SizedBox(),
+                      Text(
+                        convertTimeToString(widget.upcomingLesson.scheduleDetailInfo!.startPeriodTimestamp != null ? widget.upcomingLesson.scheduleDetailInfo!.startPeriodTimestamp! : 0, widget.upcomingLesson.scheduleDetailInfo!.endPeriodTimestamp != null ? widget.upcomingLesson.scheduleDetailInfo!.endPeriodTimestamp! : 0),
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontSize: 16, color: Colors.white),
                       ),
-                      Text(
-                        convertTimeToString(timestamp != null ? timestamp! : 0, endstamp != null ? endstamp! : 0),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 16, color: Colors.white),
-                      ),
-                      Text(
-                        "Start in ($hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')})",
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 14, color: Colors.yellow),
-                      ),
+                      (widget.upcomingLesson.scheduleDetailInfo!=null)?
+                      CountdownTimer(
+                        endTime: widget.upcomingLesson.scheduleDetailInfo!.startPeriodTimestamp!,
+                        textStyle: const TextStyle(color: Colors.yellow),
+                      ) : const SizedBox(),
                     ],
                   ),
                 ),
@@ -483,13 +591,17 @@ class _UpcomingLessonState extends State<UpcomingLesson> with AutomaticKeepAlive
           const SizedBox(
             height: 20,
           ),
-          const Text(
-            "Total lesson time is 12 hours 12 minutes",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-            ),
-          ),
+          Visibility(
+            visible: widget.totalLessonTime != null,
+            child: 
+              Text(
+                widget.totalLessonTime.isEmpty ? "Total lesson time is 0" : "Total lesson time is: ${widget.totalLessonTime}",
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+          )
         ],
       ),
     );

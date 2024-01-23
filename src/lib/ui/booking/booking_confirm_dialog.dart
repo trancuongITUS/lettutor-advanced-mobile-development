@@ -77,7 +77,7 @@ class _BookingConfirmDialogState extends State<BookingConfirmDialog> {
       actions: [
         TextButton(
           onPressed: () {
-            Navigator.pop(context,false);
+            Navigator.pop(context, false);
           },
           child: const Text(
             'CANCEL',
@@ -87,7 +87,7 @@ class _BookingConfirmDialogState extends State<BookingConfirmDialog> {
         TextButton(
           onPressed: () async {
             if (mounted) {
-              Navigator.pop(context,true);
+              Navigator.pop(context, [true, _controller.text]);
             }
           },
           child: const Text('BOOK')

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:multiselect/multiselect.dart';
 import 'package:get/get.dart';
 import 'package:src/ui/home/home_page.dart';
-import 'package:src/ui/home/time_range.dart';
 
 class SearchTutor extends StatefulWidget {
   final FilterCallback filterCallback;
@@ -24,24 +23,25 @@ class _SearchTutorState extends State<SearchTutor> {
   ];
   List<String> selectedOptionList = [];
   var selectedOption = ''.obs;
-  String selectedButton = 'All';
+  String selectedButton = 'all';
 
   @override
   Widget build(BuildContext context) {
     List<String> listFilters = [
-      "All",
-      "English for Kids",
-      "English for Business",
-      "Conversational",
-      "STARTERS",
-      "MOVERS",
-      "FLYERS",
-      "KET",
-      "PET",
-      "IELTS",
-      "TOEFL",
-      "TOEIC"
+      "all",
+      "english-for-kids",
+      "english-for-business",
+      "conversational",
+      "starters",
+      "movers",
+      "flyers",
+      "ket",
+      "pet",
+      "ielts",
+      "toefl",
+      "toeic"
     ];
+
     return Container(
       padding: const EdgeInsets.only(left: 20, right: 20),
       width: double.infinity,
@@ -121,66 +121,6 @@ class _SearchTutorState extends State<SearchTutor> {
           const SizedBox(
             height: 10,
           ),
-          const Text(
-            "Select available tutoring time:",
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              fontSize: 17,
-            ),
-            textAlign: TextAlign.left,
-          ),
-          const SizedBox(
-            height: 5,
-          ),
-          Container(
-            height: 40,
-            width: 160,
-            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.grey,
-                width: 1.0,
-              ),
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: TextField(
-              controller: _textEditingDate,
-              onTap: () async {
-                final DateTime? datetime = await showDatePicker(
-                    context: context,
-                    initialDate: selectDate,
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime(3000));
-                if (datetime != null) {
-                  setState(() {
-                    _textEditingDate.text =
-                        "${datetime.year}-${datetime.month}-${datetime.day}";
-                    selectDate = datetime;
-                  });
-                }
-              },
-              decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.only(top: 1, left: 13, right: 2),
-                  border: InputBorder.none,
-                  hintText: "Select a day",
-                  hintStyle: TextStyle(
-                    color: Colors.grey,
-                    fontWeight: FontWeight.w400,
-                  ),
-                  suffixIcon: Icon(
-                    Icons.calendar_today_outlined,
-                    color: Colors.black54,
-                    size: 20,
-                  )),
-              style: const TextStyle(
-                color: Colors.black87,
-                fontWeight: FontWeight.w400,
-                fontSize: 16,
-              ),
-            ),
-          ),
-          const TimeRangeSelector(),
           Container(
             margin: const EdgeInsets.only(top: 10, bottom: 0),
             child: Wrap(
