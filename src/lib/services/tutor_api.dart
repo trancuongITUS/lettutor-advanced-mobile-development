@@ -1,7 +1,6 @@
 import 'package:src/models/data/tutors/tutor_data.dart';
 import 'package:src/models/data/tutors/tutor_info_data.dart';
 import 'package:src/models/data/tutors/tutor_pagination.dart';
-import 'package:src/responses/get_list_tutors_response.dart';
 import 'package:src/services/api_service.dart';
 import 'package:src/services/base_api.dart';
 
@@ -17,28 +16,6 @@ class TutorAPI extends BaseAPI {
       data: {},
     );
     await onSuccess();
-  }
-
-  Future<void> getListTutor({
-    required String accessToken,
-    required int perPage,
-    required int page,
-    required Function(GetListTutorsResponse) onSuccess,
-    required Function(String) onFail,
-  }) async {
-    final response = await service.get(
-        url: "more?perPage=$perPage&page=$page",
-        headers: {"Authorization": "Bearer $accessToken"}) as BoundResource;
-
-    switch (response.statusCode) {
-      case 200:
-      case 201:
-        onSuccess(GetListTutorsResponse.fromJson(response.response));
-        break;
-      default:
-        onFail(response.errorMsg.toString());
-        break;
-    }
   }
 
   Future<void> writeReviewAfterClass({

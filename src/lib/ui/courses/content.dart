@@ -105,7 +105,7 @@ class _ContentState extends State<Content> {
           ),
         ),
         Visibility(visible: isActived == 2, child: const ListBook()),
-        Visibility(visible: isActived == 1, child: const Expanded(child: ListCourse())),
+        Visibility(visible: isActived == 1, child: const ListCourse()),
       ],
     );
   }

@@ -51,14 +51,14 @@ List<Widget> generateRatings(int rating) {
   List<Widget> widgets = [];
 
   for (int i = 1; i <=5; i++) {
-    if(i <= realRating) {
+    if (i <= realRating) {
       widgets.add(const Icon(
         Icons.star,
         size: 15,
         color: Colors.yellow,
       ));
     }
-    else{
+    else {
       widgets.add(Icon(
         Icons.star,
         size: 15,
@@ -147,7 +147,8 @@ class _TutorState extends State<Tutor> {
                         ),
                       ),
                       child: ClipOval(
-                        child: Image.network(widget.tutor.avatar ?? "https://api.app.lettutor.com/avatar/e9e3eeaa-a588-47c4-b4d1-ecfa190f63faavatar1632109929661.jpg"),
+                        child: Image.network(
+                          widget.tutor.avatar ?? ""),
                       ),
                     ),
                   ),
@@ -158,13 +159,13 @@ class _TutorState extends State<Tutor> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       GestureDetector(
-                        // onTap: () {
-                        //   Navigator.push(
-                        //     context,
-                        //     MaterialPageRoute(
-                        //         builder: (context) => DetailTutor(widget.tutor)),
-                        //   );
-                        // },
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => DetailTutor(widget.tutor, widget.changeFavoriteCallback)),
+                          );
+                        },
                         child: Text(
                           widget.tutor.name ?? "",
                           style: const TextStyle(
@@ -196,7 +197,7 @@ class _TutorState extends State<Tutor> {
                   color: widget.isFavorite ? Colors.red : Colors.blueAccent,
                 ),
                 onPressed: () {
-                  callAPIManageFavoriteTutor(widget.tutor.userId!, authenticationProvider);
+                  callAPIManageFavoriteTutor(widget.tutor.id!, authenticationProvider);
                 },
               )
             ],
@@ -221,7 +222,13 @@ class _TutorState extends State<Tutor> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => DetailTutor(widget.tutor, widget.changeFavoriteCallback)),
+                    );
+                  },
                   style: ButtonStyle(
                     side: MaterialStateProperty.all(
                       const BorderSide(

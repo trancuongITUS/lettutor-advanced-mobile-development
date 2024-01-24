@@ -203,7 +203,7 @@ class _SettingPageState extends State<SettingPage> {
               backgroundColor: Colors.blue,
               userName: "Hồ Duy Bảo",
               userProfilePic: const NetworkImage(
-                  "https://yt3.googleusercontent.com/mm2-5anuZ6ghmK2zL6QM7wciD6kuupOfOagiAh5vZE1hx9tRhKEXTAExZUUY4PVq2RSw9jBpBQ=s900-c-k-c0x00ffffff-no-rj",
+                  "https://ict-imgs.vgcloud.vn/2020/09/01/19/huong-dan-tao-facebook-avatar.jpg",
                   scale: 1),
               cardActionWidget: SettingsItem(
                 icons: Icons.edit,

@@ -3,17 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
-import 'package:flutter_pagination/flutter_pagination.dart';
+import 'package:pagination_flutter/pagination.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:src/common/loading.dart';
 import 'package:src/models/data/schedules/booking_info_data.dart';
 import 'package:src/models/data/tutors/tutor_data.dart';
 import 'package:src/provider/authentication_provider.dart';
-import 'package:src/responses/get_list_tutors_response.dart';
 import 'package:src/services/booking_api.dart';
+import 'package:src/services/call_api.dart';
 import 'package:src/services/tutor_api.dart';
-import 'package:src/styles/style.dart';
 
 import 'package:src/ui/courses/courses_page.dart';
 import 'package:src/ui/history/history_page.dart';
@@ -39,8 +38,8 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   List<String> _favoriteTutorIds = [];
   bool isLoading = true;
   bool hasCalledAPI = false;
-  int currentPage = 1;
-  int maxPage = 1;
+  int _numPages = 6;
+  int _currentPage = 1;
 
   String totalLessonTime = "";
   BookingInfoData upcomingLesson = BookingInfoData();
@@ -59,8 +58,9 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
 
     if (hasCalledAPI) {
       await Future.wait([
-          callAPIGetTutorList(1, TutorAPI(), authenticationProvider),
-          callAPIGetScheduleList(BookingAPI(), authenticationProvider)
+          searchTutor(1, TutorAPI(), authenticationProvider, specialties == "all" ? "" : specialties, nameTutor, national),
+          callAPIGetScheduleList(BookingAPI(), authenticationProvider),
+          callAPIGetTotalLessonTimes(CallAPI(), authenticationProvider),
         ]).whenComplete(() => {
         if (mounted) {
           setState(() {
@@ -70,22 +70,6 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
         }
       });
     }
-  }
-
-  Future<void> callAPIGetTutorList(int pageIndex, TutorAPI tutorAPI, AuthenticationProvider authenticationProvider) async {
-    await tutorAPI.getListTutor(
-      accessToken: authenticationProvider.token?.access?.token ?? "",
-      perPage: 10,
-      page: pageIndex,
-      onSuccess: (response) async {
-        handleTutorsFromAPI(response);
-      },
-      onFail: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${error.toString()}')),
-        );
-      }
-    );
   }
 
   Future<void> callAPIGetScheduleList(BookingAPI bookingAPI, AuthenticationProvider authenticationProvider) async {
@@ -105,30 +89,6 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
     );
   }
 
-  void handleTutorsFromAPI(GetListTutorsResponse response) {
-    response.favoriteTutor?.forEach((element) {
-      if (element.secondId != null) {
-        _favoriteTutorIds.add(element.secondId!);
-      }
-    });
-
-    List<TutorData> noneFavoriteTutors = [];
-    List<TutorData> favoriteTutors = [];
-    response.tutors?.rows?.forEach((element) {
-      if (isFavoriteTutor(element)) {
-        favoriteTutors.add(element);
-      } else {
-        noneFavoriteTutors.add(element);
-      }
-    });
-
-    favoriteTutors.sort((b, a) => (a.rating ?? 0).compareTo((b.rating ?? 0)));
-    noneFavoriteTutors.sort((b, a) => (a.rating ?? 0).compareTo((b.rating ?? 0)));
-
-    _tutors.addAll(favoriteTutors);
-    _tutors.addAll(noneFavoriteTutors);
-  }
-
   void handleSchedulesFromAPI(List<BookingInfoData> response) {
     for (var value in response) {
       if (value.isDeleted != true) {
@@ -136,40 +96,8 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
       }
     }
 
-    DateTime totalTime = DateTime.now();
-    DateTime nowTime = DateTime.now();
-    for (var element in _lessons) {
-      DateTime startTime = DateTime.fromMillisecondsSinceEpoch(element.scheduleDetailInfo?.startPeriodTimestamp ?? 0);
-      DateTime endTime = DateTime.fromMillisecondsSinceEpoch(element.scheduleDetailInfo?.endPeriodTimestamp ?? 0);
-
-      var learningTime = endTime.difference(startTime);
-      totalTime = totalTime.add(learningTime);
-    }
-
-    Duration learningDuration = totalTime.difference(nowTime);
     if (_lessons.isNotEmpty) {
       upcomingLesson = _lessons.first;
-      totalLessonTime = getStringDuration(learningDuration);
-    }
-  }
-
-  String getStringDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-
-    return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
-  }
-
-  int getShowPagesBasedOnPages(int pages) {
-    if (pages > 2) {
-      return 2;
-    } else if (pages == 2) {
-      return 1;
-    } else if (pages <= 1) {
-      return 0;
-    } else {
-      return 0;
     }
   }
 
@@ -178,15 +106,30 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
       accessToken: authenticationProvider.token?.access?.token ?? "",
       searchKeys: name,
       page: pageIndex,
-      speciality: [filter],
+      speciality: filter != "all" ? [filter] : [],
       nationality: nationality,
       onSuccess: (response, total) async {
+        _favoriteTutorIds = [];
+        List<TutorData> notFavoreds = [];
+        List<TutorData> favoreds = [];
+        for (var element in response) {
+          if (isFavoriteTutor(element)) {
+            favoreds.add(element);
+            _favoriteTutorIds.add(element.userId ?? "");
+          } else {
+            notFavoreds.add(element);
+          }
+        }
+
+        favoreds.sort((b, a) => (a.rating ?? 0).compareTo((b.rating ?? 0)));
+        notFavoreds.sort((b, a) => (a.rating ?? 0).compareTo((b.rating ?? 0)));
+
         _tutors = [];
-        _tutors.addAll(response);
+        _tutors.addAll(favoreds);
+        _tutors.addAll(notFavoreds);
         setState(() {
           isLoading = false;
-          currentPage = pageIndex;
-          maxPage = (total / 10).ceil();
+          _numPages = (total / 10).ceil();
         });
       },
       onFail: (error) {
@@ -197,11 +140,32 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
     );
   }
 
+  Future<void> callAPIGetTotalLessonTimes(CallAPI callAPI, AuthenticationProvider authenticationProvider) async {
+    await callAPI.getTotalLessonTime(
+      accessToken: authenticationProvider.token?.access?.token ?? "",
+      onSuccess: (int total) async {
+        if (total > 0) {
+          int hours = total ~/ 60;
+          int minutes = total % 60;
+          if (hours >= 1) {
+            String timeString = "$hours hours $minutes minutes";
+            totalLessonTime = timeString;
+          } else {
+            String timeString = "$minutes minutes";
+            totalLessonTime = timeString;
+          }
+        }
+      },
+      onFail: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${error.toString()}')),
+        );
+      });
+  }
+
   bool isFavoriteTutor(TutorData tutorData) {
-    for (var element in _favoriteTutorIds) {
-      if (element == tutorData.userId) {
-        return true;
-      }
+    if (tutorData.isFavoriteTutor != null && tutorData.isFavoriteTutor == true) {
+      return true;
     }
 
     return false;
@@ -216,8 +180,9 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
     });
 
     await Future.wait([
-        callAPIGetTutorList(1, TutorAPI(), authenticationProvider),
-        callAPIGetScheduleList(BookingAPI(), authenticationProvider)
+        searchTutor(1, TutorAPI(), authenticationProvider, specialties == "all" ? "" : specialties, nameTutor, national),
+        callAPIGetScheduleList(BookingAPI(), authenticationProvider),
+        callAPIGetTotalLessonTimes(CallAPI(), authenticationProvider),
       ]).whenComplete(() {
       setState(() {
         isLoading = false;
@@ -274,7 +239,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
         national = nationality;
       });
 
-      searchTutor(currentPage, TutorAPI(), authenticationProvider, "all" == filter ? "" : filter, nameTutor, nationality);
+      searchTutor(1, TutorAPI(), authenticationProvider, "all" == filter ? "" : filter, nameTutor, nationality);
     }
     
     return Scaffold(
@@ -465,22 +430,45 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                 alignment: Alignment.center,
                 padding: const EdgeInsets.all(16),
                 child: Pagination(
-                  paginateButtonStyles: paginationStyle(context),
-                  prevButtonStyles: prevButtonStyles(context),
-                  nextButtonStyles: nextButtonStyles(context),
-                  onPageChange: (pageIndex) {
+                  numOfPages: _numPages,
+                  selectedPage: _currentPage,
+                  pagesVisible: 4,
+                  onPageChanged: (pageIndex) {
                     setState(() {
                       isLoading = true;
-                      currentPage = pageIndex;
+                      _currentPage = pageIndex;
                     });
-                    searchTutor(pageIndex, TutorAPI(), authenticationProvider, specialties, nameTutor, national);
+                    searchTutor(pageIndex, TutorAPI(), authenticationProvider, specialties == "all" ? "" : specialties, nameTutor, national);
                   },
-                  useGroup: false,
-                  totalPage: maxPage,
-                  show: maxPage - 1,
-                  currentPage: currentPage,
+                  nextIcon: const Icon(
+                    Icons.arrow_forward_ios,
+                    color: Colors.blue,
+                    size: 14,
+                  ),
+                  previousIcon: const Icon(
+                    Icons.arrow_back_ios,
+                    color: Colors.blue,
+                    size: 14,
+                  ),
+                  activeTextStyle: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  activeBtnStyle: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all<Color>(Colors.blue),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(100))),
+                  ),
+                  inactiveBtnStyle: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(100))),
+                  ),
+                  inactiveTextStyle: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  ),
                 ),
-              )
             ],
           ),
         ),

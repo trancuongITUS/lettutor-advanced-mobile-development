@@ -1,8 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:rating_dialog/rating_dialog.dart';
+import 'package:src/common/loading.dart';
 import 'package:src/models/data/schedules/booking_info_data.dart';
+import 'package:src/provider/authentication_provider.dart';
+import 'package:src/services/booking_api.dart';
+import 'package:src/ui/booking/booking.dart';
 
 class Session extends StatefulWidget {
   final BookingInfoData schedule;
@@ -15,6 +20,15 @@ class Session extends StatefulWidget {
 }
 
 class _SessionState extends State<Session> {
+  bool isLoading = false;
+
+  final List<DropdownMenuItem<String>> reasons = [
+    const DropdownMenuItem(value: '1', child: Text('Reschedule at another time')),
+    const DropdownMenuItem(value: '2', child: Text('Busy at that time')),
+    const DropdownMenuItem(value: '3', child: Text('Asked by the tutor')),
+    const DropdownMenuItem(value: '4', child: Text('Other')),
+  ];
+
   String convertDate(int time) {
     return DateFormat.yMMMMEEEEd().format(DateTime.fromMillisecondsSinceEpoch(time));
   }
@@ -26,6 +40,191 @@ class _SessionState extends State<Session> {
     String resultStart = "${timeStart.hour.toString().length == 1 ? "0${timeStart.hour}" : timeStart.hour.toString()} : ${timeStart.minute.toString().length == 1 ? "0${timeStart.minute}" : timeStart.minute.toString()}";
     String resultEnd = "${timeEnd.hour.toString().length == 1 ? "0${timeEnd.hour}" : timeEnd.hour.toString()} : ${timeEnd.minute.toString().length == 1 ? "0${timeEnd.minute}" : timeEnd.minute.toString()}";
     return "$resultStart - $resultEnd";
+  }
+
+  void _dialogBuilder(BuildContext context) {
+    String? valueReason;
+    bool errorReason=false;
+    TextEditingController textEditingController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return isLoading? const Loading(): AlertDialog(
+          content: SingleChildScrollView(
+            child: Container(
+              margin: const EdgeInsets.only(top: 20,bottom: 0),
+              child: Column(
+                children: [
+                  Container(
+                    width: 65,
+                    height: 65,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.blue,
+                        width: 1,
+                      ),
+                    ),
+                    child: ClipOval(
+                      child: Image.network(widget.schedule!.scheduleDetailInfo!
+                              .scheduleInfo!.tutorInfo!.avatar ??
+                          "https://sandbox.app.lettutor.com/static/media/login.8d01124a.png"),
+                    ),
+                  ),
+                  Text(
+                    widget.schedule!.scheduleDetailInfo!.scheduleInfo!.tutorInfo!
+                        .name!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 8,
+                  ),
+                  Text(
+                    'Lesson Time',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade800),
+                  ),
+                  const SizedBox(
+                    height: 3,
+                  ),
+                  Text(
+                    convertDate(widget
+                        .schedule.scheduleDetailInfo!.startPeriodTimestamp!),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Container(
+                    height: 0.5,
+                    color: Colors
+                        .grey.shade400,
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text("What was the reason you cancel this booking?",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                      )),
+                  const SizedBox(
+                    height: 10,
+                  ),
+
+                  Container(
+                      margin: const EdgeInsets.symmetric(vertical: 16),
+                      child: DropdownButtonFormField(
+                        items: reasons,
+                        value: valueReason,
+                        decoration: InputDecoration(
+                          focusedBorder: OutlineInputBorder(
+                            borderSide:
+                                const BorderSide(color: Colors.blue, width: 2),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          border: OutlineInputBorder(
+                            borderSide:
+                                const BorderSide(color: Colors.black, width: 2),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                        ),
+                        onChanged: (String? value) {
+                          setState(() {
+                            valueReason = value;
+                          });
+                        },
+                      )),
+                  Visibility(
+                      visible: errorReason,
+                      child: const Text(
+                        "The reason cannot be empty",
+                        style: TextStyle(color: Colors.red),
+                      )),
+                  Container(
+                    child: TextField(
+                      maxLines: 3,
+                      controller: textEditingController,
+                      keyboardType: TextInputType.text,
+                      decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: "Additional Notes",
+                          hintStyle: TextStyle(
+                              fontWeight: FontWeight.w300, fontSize: 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('Later'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('Submit'),
+              onPressed: () {
+                if(valueReason != null) {
+                  AuthenticationProvider authenticationProvider = Provider.of<AuthenticationProvider>(context, listen: false);
+                  setState(() {
+                    isLoading=true;
+                  });
+                  callApiCancelClass(valueReason!, textEditingController.text, widget.schedule.id!, BookingAPI(), authenticationProvider);
+                  Navigator.of(context).pop();
+                }
+                else {
+                  setState(() {
+                    errorReason=true;
+                  });
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> callApiCancelClass(String cancelReasonId, String note, String scheduleDetailId, BookingAPI bookingAPI, AuthenticationProvider authenticationProvider) async {
+    await bookingAPI.cancelClass(
+        accessToken: authenticationProvider.token?.access?.token ?? "",
+        cancelReasonId: cancelReasonId,
+        note: note,
+        scheduleDetailId: scheduleDetailId,
+        onSuccess: (message) async {
+          setState(() {
+            isLoading=false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message,style: const TextStyle(
+              color: Colors.white
+            ),),
+            backgroundColor: Colors.green,),
+          );
+        },
+        onFail: (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${error.toString()}')),
+          );
+        });
   }
 
   @override
@@ -134,7 +333,9 @@ class _SessionState extends State<Session> {
                     Visibility(
                       visible: widget.typeSession == "Schedule",
                       child: TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            _dialogBuilder(context);
+                          },
                           style: ButtonStyle(
                             side: MaterialStateProperty.all(
                               const BorderSide(
@@ -216,7 +417,7 @@ class _SessionState extends State<Session> {
                               ),
                             )),
                             child: Text(
-                              widget.schedule.scheduleDetailInfo!.bookingInfo?[0].studentRequest! ?? "",
+                              widget.schedule.studentRequest ?? "",
                               style: const TextStyle(fontSize: 14),
                             ))
                       ],

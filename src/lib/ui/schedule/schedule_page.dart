@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pagination_flutter/pagination.dart';
 import 'package:provider/provider.dart';
 import 'package:src/common/loading.dart';
 import 'package:src/models/data/schedules/booking_info_data.dart';
@@ -22,7 +23,8 @@ class _SchedulePageState extends State<SchedulePage> {
   List<BookingInfoData> lessons = [];
   bool hasCalledAPI = false;
   bool isLoading = true;
-  int currentPage = 1;
+  int _numPages = 1;
+  int _currentPage = 1;
 
   @override
   void didChangeDependencies() {
@@ -37,7 +39,7 @@ class _SchedulePageState extends State<SchedulePage> {
     await bookingAPI.getUpcomingClass(
       accessToken: authenticationProvider.token?.access?.token ?? "",
       page: page,
-      perPage: 20,
+      perPage: 10,
       now: DateTime.now().millisecondsSinceEpoch.toString(),
       onSuccess: (response, total) async {
         lessons = [];
@@ -51,7 +53,6 @@ class _SchedulePageState extends State<SchedulePage> {
           hasCalledAPI = true;
           isLoading = false;
         });
-        currentPage = page;
       },
       onFail: (error) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -77,7 +78,9 @@ class _SchedulePageState extends State<SchedulePage> {
 
   @override
   Widget build(BuildContext context) {
+    AuthenticationProvider authenticationProvider = Provider.of<AuthenticationProvider>(context, listen: false);
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       endDrawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -251,6 +254,7 @@ class _SchedulePageState extends State<SchedulePage> {
         },
         child: isLoading ? const Loading() : SingleChildScrollView(
         child: Container(
+          constraints: const BoxConstraints(minHeight: 600),
           padding: const EdgeInsets.all(25),
           child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -292,14 +296,70 @@ class _SchedulePageState extends State<SchedulePage> {
                 const SizedBox(
                   height: 10,
                 ),
+                ListView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemCount: lessons.length,
+                  itemBuilder: (context, index) {
+                    return Session(
+                      typeSession: "Schedule",
+                      schedule: lessons[index],
+                    );
+                  },
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
                 Visibility(
-                  visible: !isLoading,
-                  child: ListView(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    children: lessons.isNotEmpty
-                      ? [Session(typeSession: "Schedule", schedule: lessons[0])]
-                      : [],
+                  visible: _numPages > 1,
+                  child: Container(
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Pagination(
+                      numOfPages: _numPages,
+                      selectedPage: _currentPage,
+                      pagesVisible: 4,
+                      onPageChanged: (pageIndex) {
+                        setState(() {
+                          isLoading = true;
+                          _currentPage = pageIndex;
+                        });
+
+                        callAPIGetOwnSchedules(pageIndex, BookingAPI(), authenticationProvider);
+                      },
+                      nextIcon: const Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.blue,
+                        size: 14,
+                      ),
+                      previousIcon: const Icon(
+                        Icons.arrow_back_ios,
+                        color: Colors.blue,
+                        size: 14,
+                      ),
+                      activeTextStyle: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      activeBtnStyle: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(Colors.blue),
+                        shape: MaterialStateProperty.all(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                        ),
+                      ),
+                      inactiveBtnStyle: ButtonStyle(
+                        shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(100),
+                        )),
+                      ),
+                      inactiveTextStyle: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    )
                   ),
                 )
               ]),

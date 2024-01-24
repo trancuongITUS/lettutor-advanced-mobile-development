@@ -19,7 +19,7 @@ class _ListTutorsState extends State<ListTutors> {
 
   bool isFavoriteTutor(TutorData tutorData) {
     for (var element in widget.favoriteTutorIds) {
-      if (element == tutorData.userId) {
+      if (element == tutorData.id) {
         return true;
       }
     }

@@ -8,6 +8,7 @@ import 'package:src/models/data/tutors/tutor_data.dart';
 import 'package:src/models/data/tutors/tutor_info_data.dart';
 import 'package:src/provider/authentication_provider.dart';
 import 'package:src/services/tutor_api.dart';
+import 'package:src/services/user_api.dart';
 import 'package:src/ui/booking/booking.dart';
 import 'package:src/ui/detail_tutor/info_detail.dart';
 import 'package:src/ui/detail_tutor/list_reviews.dart';
@@ -26,17 +27,22 @@ class DetailTutor extends StatefulWidget {
 class _DetailTutorState extends State<DetailTutor> {
   late TutorData tutor;
   late TutorInfoData tutorInfo;
-  bool isLoading = false;
+  bool isLoading = true;
 
   @override
   void initState() {
-    tutor = widget.tutor;
+    setState(() {
+      tutor = widget.tutor;
+    });
     super.initState();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    setState(() {
+      tutor = widget.tutor;
+    });
     callAPIGetTutorById(TutorAPI(), Provider.of<AuthenticationProvider>(context, listen: false), tutor.userId!);
   }
 
@@ -47,7 +53,7 @@ class _DetailTutorState extends State<DetailTutor> {
       onSuccess: (response) async {
         setState(() {
           tutorInfo = response;
-          isLoading = true;
+          isLoading = false;
         });
       },
       onFail: (error) {
@@ -55,6 +61,36 @@ class _DetailTutorState extends State<DetailTutor> {
           SnackBar(content: Text('Error: ${error.toString()}')),
         );
       });
+  }
+
+  Future<void> callApiManageFavoriteTutor(String tutorID, AuthenticationProvider authenticationProvider) async {
+    UserAPI userAPI = UserAPI();
+
+
+    await userAPI.favoriteTutor(
+        accessToken: authenticationProvider.token?.access?.token ?? "",
+        tutorId: tutorID!,
+        onSuccess: (message, unfavored) async {
+          setState(() {
+            widget.changeFavoriteCallback(tutorID);
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              backgroundColor: Colors.green,
+              content: Text(
+                "Update favorite tutor successful",
+                style: TextStyle(color: Colors.white),
+              ),
+              duration: Duration(seconds: 1),
+            ),
+          );
+        },
+        onFail: (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${error.toString()}')),
+          );
+        });
   }
 
   Future<void> refreshHome() async {
@@ -98,7 +134,7 @@ class _DetailTutorState extends State<DetailTutor> {
 
   @override
   Widget build(BuildContext context) {
-
+    var authProvider = Provider.of<AuthenticationProvider>(context, listen: false);
     return Scaffold(
       appBar: PreferredSize(
       preferredSize: const Size.fromHeight(50.0),
@@ -140,7 +176,7 @@ class _DetailTutorState extends State<DetailTutor> {
         onRefresh: () async {
           await refreshHome();
         },
-        child: !isLoading ? const Loading() : SingleChildScrollView(
+        child: (isLoading || null == tutor) ? const Loading() : SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.all(25),
           child: Column(children: [
@@ -224,7 +260,7 @@ class _DetailTutorState extends State<DetailTutor> {
                   children: [
                     IconButton(
                         onPressed: () {
-                          widget.changeFavoriteCallback(widget.tutor.userId!);
+                          callApiManageFavoriteTutor(tutor.userId!, authProvider);
                         },
                         icon: Icon(
                           tutorInfo.isFavorite! ? Icons.favorite : Icons.favorite_border,
@@ -262,7 +298,7 @@ class _DetailTutorState extends State<DetailTutor> {
             ChewieDemo(linkVideo: tutorInfo.video!,),
             InfoDetail(tutorInfo),
             const SizedBox(height: 20),
-            ListReview(tutor.feedbacks!.sublist(0, 10)),
+            ListReview(tutor.feedbacks?.sublist(0, 10) ?? []),
             const SizedBox(height: 20),
             Booking(tutor: widget.tutor)
           ]

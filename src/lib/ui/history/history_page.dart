@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:pagination_flutter/pagination.dart';
 import 'package:provider/provider.dart';
 import 'package:src/common/loading.dart';
 import 'package:src/models/data/schedules/booking_info_data.dart';
@@ -23,7 +24,8 @@ class _HistorypageState extends State<HistoryPage> {
   List<BookingInfoData> historyLessons = [];
   bool hasCalledAPI = false;
   bool isLoading = true;
-  int currentPage = 1;
+  int _numPages = 1;
+  int _currentPage = 1;
 
   @override
   void didChangeDependencies() {
@@ -35,11 +37,26 @@ class _HistorypageState extends State<HistoryPage> {
     }
   }
 
+  Future<void> refreshSchedule() async {
+    setState(() {
+      historyLessons = [];
+      isLoading = true;
+    });
+    await Future.wait([
+      callAPIGetHistoryLessons(1, BookingAPI(), Provider.of<AuthenticationProvider>(context, listen: false)),
+    ]).whenComplete(() {
+      setState(() {
+        isLoading = false;
+      });
+      return Future<void>.delayed(const Duration(seconds: 0));
+    });
+  }
+
   Future<void> callAPIGetHistoryLessons(int page, BookingAPI bookingAPI, AuthenticationProvider authenticationProvider) async {
     await bookingAPI.getHistoryLesson(
         accessToken: authenticationProvider.token?.access?.token ?? "",
         page: page,
-        perPage: 20,
+        perPage: 10,
         now: DateTime.now().millisecondsSinceEpoch.toString(),
         onSuccess: (response, total) async {
           historyLessons = [];
@@ -49,11 +66,11 @@ class _HistorypageState extends State<HistoryPage> {
             }
           }
           setState(() {
+            _numPages = total;
             isLoading = false;
             hasCalledAPI = true;
           });
 
-          currentPage = page;
         },
         onFail: (error) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -64,6 +81,7 @@ class _HistorypageState extends State<HistoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    AuthenticationProvider authenticationProvider = Provider.of<AuthenticationProvider>(context, listen: false);
     return Scaffold(
         endDrawer: Drawer(
           child: ListView(
@@ -232,57 +250,116 @@ class _HistorypageState extends State<HistoryPage> {
                 )),
           ),
         ),
-        body: isLoading ? const Loading() : SingleChildScrollView(
-          child: Container(
-            padding: const EdgeInsets.all(25),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SvgPicture.asset(
-                    'img/history.svg',
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  const Text(
-                    "History",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(top: 10, bottom: 20),
-                    decoration: const BoxDecoration(
-                        border: Border(
-                      left: BorderSide(
-                        color: Colors.grey,
-                        width: 2.5,
-                      ),
-                    )),
-                    padding: const EdgeInsets.only(left: 10),
-                    child: const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "The following is a list of lessons you have attended",
-                            style: TextStyle(fontSize: 16),
+        body: RefreshIndicator(
+          onRefresh: () async {
+            await refreshSchedule();
+          },
+          child: isLoading ? const Loading() : SingleChildScrollView(
+            child: Container(
+              padding: const EdgeInsets.all(25),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SvgPicture.asset(
+                      'img/history.svg',
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    const Text(
+                      "History",
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 10, bottom: 20),
+                      decoration: const BoxDecoration(
+                          border: Border(
+                        left: BorderSide(
+                          color: Colors.grey,
+                          width: 2.5,
+                        ),
+                      )),
+                      padding: const EdgeInsets.only(left: 10),
+                      child: const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "The following is a list of lessons you have attended",
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            Text(
+                                "You can review the details of the lessons you have attended",
+                                style: TextStyle(fontSize: 16)),
+                          ]),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    ListView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount: historyLessons.length,
+                      itemBuilder: (context, index) {
+                        return Session(schedule: historyLessons[index], typeSession: "History");
+                      },
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Visibility(
+                      visible: _numPages > 1,
+                      child: Container(
+                        alignment: Alignment.center,
+                        child: Pagination(
+                          numOfPages: _numPages,
+                          selectedPage: _currentPage,
+                          pagesVisible: 3,
+                          onPageChanged: (pageIndex) {
+                            setState(() {
+                              _currentPage = pageIndex;
+                              isLoading = true;
+                            });
+                            callAPIGetHistoryLessons(pageIndex, BookingAPI(), authenticationProvider);
+                          },
+                          nextIcon: const Icon(
+                            Icons.arrow_forward_ios,
+                            color: Colors.blue,
+                            size: 14,
                           ),
-                          Text(
-                              "You can review the details of the lessons you have attended",
-                              style: TextStyle(fontSize: 16)),
-                        ]),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  ListView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount: historyLessons.length,
-                    itemBuilder: (context, index) {
-                      return Session(schedule: historyLessons[index], typeSession: "History");
-                    },
-                  ),
-                ]),
-          ),
-        ));
+                          previousIcon: const Icon(
+                            Icons.arrow_back_ios,
+                            color: Colors.blue,
+                            size: 14,
+                          ),
+                          activeTextStyle: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          activeBtnStyle: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(Colors.blue),
+                            shape: MaterialStateProperty.all(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                            ),
+                          ),
+                          inactiveBtnStyle: ButtonStyle(
+                            shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(100),
+                            )),
+                          ),
+                          inactiveTextStyle: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        )
+                      ),
+                    )
+                  ]),
+            ),
+          )
+        )
+      );
   }
 }

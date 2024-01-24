@@ -47,6 +47,7 @@ class TutorData {
   bool? isNative;
   int? price;
   bool? isOnline;
+  bool? isFavoriteTutor;
   TutorInfoData? tutorInfo;
 
   TutorData({
@@ -93,6 +94,7 @@ class TutorData {
     this.isNative,
     this.price,
     this.isOnline,
+    this.isFavoriteTutor,
     this.tutorInfo
   });
   factory TutorData.fromJson(Map<String, dynamic> json) =>
@@ -142,6 +144,7 @@ class TutorData {
         isNative: json['isNative'] as bool?,
         price: json['price'] as int?,
         isOnline: json['isOnline'] as bool?,
+        isFavoriteTutor: json['isFavoriteTutor'] as bool?,
         tutorInfo: json['tutorInfo'] == null
             ? null
             : TutorInfoData.fromJson(json['tutorInfo'] as Map<String, dynamic>),
@@ -190,6 +193,7 @@ class TutorData {
     'isNative': isNative,
     'price': price,
     'isOnline': isOnline,
+    'isFavoriteTutor': isFavoriteTutor,
     'tutorInfo': tutorInfo,
   };
 }

@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:multiselect/multiselect.dart';
 import 'package:provider/provider.dart';
+import 'package:src/common/loading.dart';
 import 'package:src/models/data/users/user_data.dart';
 import 'package:src/provider/authentication_provider.dart';
 import 'package:src/services/user_api.dart';
@@ -31,19 +32,19 @@ class _ProfilePageState extends State<ProfilePage> {
   String selectedCountry = "Vietnam";
   List<String> itemsLevel = [
     "BEGINNER",
-    "HIGHER-BEGINNER",
-    "PRE-INTERMEDIATE",
+    "HIGHER_BEGINNER",
+    "PRE_INTERMEDIATE",
     "INTERMEDIATE",
-    "UPPER-INTERMEDIATE",
+    "UPPER_INTERMEDIATE",
     "ADVANCED",
     "PROFICIENCY"
   ];
   List<String> itemsCategory = [
-    'All',
-    'English-For-Kids',
-    'Business-English',
+    'ALL',
+    'ENGLISTS-FOR-KIDS',
+    'BUSINESS-ENGLISH',
     'TOEIC',
-    'Conversational',
+    'CONVERSATIONAL',
     "TOEFL",
     'PET',
     "KET",
@@ -82,7 +83,7 @@ class _ProfilePageState extends State<ProfilePage> {
       }
 
       selectedDate = DateTime.parse(userData.birthday ?? DateTime.now().toString());
-      String level = userData.level ?? "";
+      String level = userData.level ?? "BEGINNER";
       check = false;
       for (var element in itemsLevel) {
         if (element.toLowerCase().compareTo(level.toLowerCase()) == 0) {
@@ -101,17 +102,6 @@ class _ProfilePageState extends State<ProfilePage> {
       userData.learnTopics?.forEach((element) {
         selectedCategory.add(element.key!.toUpperCase());
       });
-      for (var itemCategory in itemsCategory) {
-        userData.learnTopics?.forEach((learnTopic) {
-          if (learnTopic.key?.toString().compareTo(itemCategory.toLowerCase()) != null) {
-            check == true;
-
-            setState(() {
-              itemsCategory.add(learnTopic.key!.toUpperCase().toString());
-            });
-          }
-        });
-      }
 
       hasInitValue = true;
     });
@@ -181,6 +171,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: PreferredSize(
         preferredSize:
             const Size.fromHeight(50.0),
@@ -221,7 +212,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
+      body: !hasInitValue ? const Loading() : SingleChildScrollView(
         child: Container(
           margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
           child: Column(

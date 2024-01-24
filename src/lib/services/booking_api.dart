@@ -19,7 +19,7 @@ class BookingAPI extends BaseAPI {
   }) async {
     final response = await service.get(
         url:
-            "list/student?page=$page&perPage=$perPage&dateTimeGte=$now&orderBy=meeting&sortBy=desc",
+            "list/student?page=$page&perPage=$perPage&inFuture=1&orderBy=meeting&sortBy=desc",
         headers: {"Authorization": "Bearer $accessToken"}) as BoundResource;
 
     switch (response.statusCode) {
@@ -76,6 +76,36 @@ class BookingAPI extends BaseAPI {
       case 201:
         var result = GetListBookingsResponse.fromJson(response.response).data;
         onSuccess(result?.rows ?? [], result?.count ?? 0);
+        break;
+      default:
+        onFail(response.errorMsg.toString());
+        break;
+    }
+  }
+
+  Future<void> cancelClass({
+    required String accessToken,
+    required String cancelReasonId,
+    required String note,
+    required String scheduleDetailId,
+    required Function(String) onSuccess,
+    required Function(String) onFail,
+  }) async {
+    final response = await service.delete(
+        url: "schedule-detail",
+        data: {
+          "scheduleDetailId": scheduleDetailId,
+          "cancelInfo": {
+            "cancelReasonId": cancelReasonId,
+            "note":note
+          }
+        },
+        headers: {"Authorization": "Bearer $accessToken"}) as BoundResource;
+
+    switch (response.statusCode) {
+      case 200:
+      case 201:
+        onSuccess(response.response['message']);
         break;
       default:
         onFail(response.errorMsg.toString());
