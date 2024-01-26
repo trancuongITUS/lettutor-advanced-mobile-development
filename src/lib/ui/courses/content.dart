@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:src/models/data/courses/course_data.dart';
 import 'package:src/ui/courses/list_books.dart';
 import 'package:src/ui/courses/list_courses.dart';
 
 class Content extends StatefulWidget {
-  const Content({super.key});
+  const Content(this.courses, this.groupedCourses, {super.key});
+  final List<CourseData> courses;
+  final Map<String, List<CourseData>> groupedCourses;
 
   @override
   State<Content> createState() => _ContentState();
@@ -105,7 +108,7 @@ class _ContentState extends State<Content> {
           ),
         ),
         Visibility(visible: isActived == 2, child: const ListBook()),
-        Visibility(visible: isActived == 1, child: const ListCourse()),
+        Visibility(visible: isActived == 1, child: ListCourse(widget.courses, widget.groupedCourses)),
       ],
     );
   }

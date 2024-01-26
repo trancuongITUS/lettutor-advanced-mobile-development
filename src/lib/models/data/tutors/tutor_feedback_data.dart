@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:src/models/data/tutors/tutor_transfered_data.dart';
+import 'package:src/models/data/tutors/first_info_data.dart';
 
 @JsonSerializable()
 class TutorFeedbackData {
@@ -11,7 +11,7 @@ class TutorFeedbackData {
   String? content;
   String? createdAt;
   String? updatedAt;
-  TutorTransferedData? firstInfo;
+  FirstInfoData? firstInfo;
 
   TutorFeedbackData({
     this.id,
@@ -37,7 +37,7 @@ class TutorFeedbackData {
         updatedAt: json['updatedAt'] as String?,
         firstInfo: json['firstInfo'] == null
             ? null
-            : TutorTransferedData.fromJson(
+            : FirstInfoData.fromJson(
             json['firstInfo'] as Map<String, dynamic>),
       );
   Map<String, dynamic> toJson() => <String, dynamic>{

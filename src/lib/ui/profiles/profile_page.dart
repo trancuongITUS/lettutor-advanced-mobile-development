@@ -23,6 +23,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  String linkAvatar = "";
   TextEditingController nameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController phoneController = TextEditingController();
@@ -62,6 +63,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void initValues(UserData userData) {
     setState(() {
+      linkAvatar = userData.avatar ?? "";
       nameController.text = userData.name ?? "";
       emailController.text = userData.email ?? "";
       phoneController.text = userData.phone ?? "";
@@ -82,7 +84,24 @@ class _ProfilePageState extends State<ProfilePage> {
         });
       }
 
-      selectedDate = DateTime.parse(userData.birthday ?? DateTime.now().toString());
+      if (userData.birthday != null) {
+        List<String> dateComponents = userData.birthday!.split('-');
+
+        if (dateComponents.length == 3) {
+          String year = dateComponents[0];
+          String month = dateComponents[1];
+          String day = dateComponents[2];
+
+          DateTime dateTime = DateTime(
+              int.parse(year), int.parse(month), int.parse(day));
+
+          String formattedDateString = "${dateTime.year}-${dateTime.month
+              .toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(
+              2, '0')}";
+          selectedDate =
+              DateTime.parse(formattedDateString);
+        }
+      }
       String level = userData.level ?? "BEGINNER";
       check = false;
       for (var element in itemsLevel) {
@@ -126,7 +145,7 @@ class _ProfilePageState extends State<ProfilePage> {
         authProvider.saveLoginInfo(user, authProvider.token);
         initValues(authProvider.currentUser!);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully')),
+          const SnackBar(content: Text('Profile updated successfully' , style: TextStyle(color: Colors.white),), backgroundColor: Colors.green),
         );
       },
       onFail: (error) {
@@ -240,8 +259,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               image: _pickedFile != null
                                   ? FileImage(File(_pickedFile!.path))
                                       as ImageProvider<Object>
-                                  : NetworkImage(authenticationProvider.currentUser?.avatar ??
-                                      "https://sandbox.api.lettutor.com/avatar/f569c202-7bbf-4620-af77-ecc1419a6b28avatar1700296337596.jpg"))),
+                                  : NetworkImage(linkAvatar))),
                     ),
                     Positioned(
                       bottom: 0,
@@ -461,7 +479,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildInputField(TextEditingController controller, String hintText,
-      {isPassword = false, Function? validator}) {
+      {isPassword = false}) {
     return TextFormField(
       controller: controller,
       style: const TextStyle(

@@ -18,8 +18,8 @@ import 'package:src/ui/courses/courses_page.dart';
 import 'package:src/ui/history/history_page.dart';
 import 'package:src/ui/home/list_tutors.dart';
 import 'package:src/ui/home/search_tutor.dart';
+import 'package:src/ui/meeting_lesson/meeting_lesson_page.dart';
 import 'package:src/ui/schedule/schedule_page.dart';
-import 'package:src/ui/video_call/video_call_page.dart';
 
 typedef FilterCallback = void Function(String filter, String nameTutor, List<String> nations);
 typedef ChangeFavoriteCallback = void Function(String tutorId);
@@ -416,6 +416,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
         child: isLoading ? const Loading() : SingleChildScrollView(
           child: Column(
             children: [
+              // ignore: unnecessary_null_comparison
               (upcomingLesson != null) ? UpcomingLesson(upcomingLesson: upcomingLesson, totalLessonTime: totalLessonTime) : const SizedBox(),
               SearchTutor(filterCallback),
               const Divider(
@@ -553,7 +554,7 @@ class _UpcomingLessonState extends State<UpcomingLesson>{
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const VideoCall())
+                        MaterialPageRoute(builder: (context) => MeetingLessonPage(upcomingClass: widget.upcomingLesson,))
                       );
                     },
                     child: const Row(
@@ -580,6 +581,7 @@ class _UpcomingLessonState extends State<UpcomingLesson>{
             height: 20,
           ),
           Visibility(
+            // ignore: unnecessary_null_comparison
             visible: widget.totalLessonTime != null,
             child: 
               Text(

@@ -4,6 +4,7 @@ class TimeRangeSelector extends StatefulWidget {
   const TimeRangeSelector({Key? key}) : super(key: key);
 
   @override
+  // ignore: library_private_types_in_public_api
   _TimeRangeSelectorState createState() => _TimeRangeSelectorState();
 }
 

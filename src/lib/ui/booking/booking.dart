@@ -204,6 +204,7 @@ class _BookingState extends State<Booking> {
                                 ),
                               );
                             });
+                        // ignore: use_build_context_synchronously
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(message),
@@ -223,6 +224,7 @@ class _BookingState extends State<Booking> {
                       );
                     });
                   } catch (e) {
+                    // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(e.toString()),

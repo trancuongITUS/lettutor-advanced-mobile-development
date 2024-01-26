@@ -23,7 +23,7 @@ class _SchedulePageState extends State<SchedulePage> {
   List<BookingInfoData> lessons = [];
   bool hasCalledAPI = false;
   bool isLoading = true;
-  int _numPages = 1;
+  final int _numPages = 1;
   int _currentPage = 1;
 
   @override

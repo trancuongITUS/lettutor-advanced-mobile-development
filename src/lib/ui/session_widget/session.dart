@@ -7,7 +7,6 @@ import 'package:src/common/loading.dart';
 import 'package:src/models/data/schedules/booking_info_data.dart';
 import 'package:src/provider/authentication_provider.dart';
 import 'package:src/services/booking_api.dart';
-import 'package:src/ui/booking/booking.dart';
 
 class Session extends StatefulWidget {
   final BookingInfoData schedule;
@@ -67,13 +66,13 @@ class _SessionState extends State<Session> {
                       ),
                     ),
                     child: ClipOval(
-                      child: Image.network(widget.schedule!.scheduleDetailInfo!
+                      child: Image.network(widget.schedule.scheduleDetailInfo!
                               .scheduleInfo!.tutorInfo!.avatar ??
                           "https://sandbox.app.lettutor.com/static/media/login.8d01124a.png"),
                     ),
                   ),
                   Text(
-                    widget.schedule!.scheduleDetailInfo!.scheduleInfo!.tutorInfo!
+                    widget.schedule.scheduleDetailInfo!.scheduleInfo!.tutorInfo!
                         .name!,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
@@ -150,17 +149,15 @@ class _SessionState extends State<Session> {
                         "The reason cannot be empty",
                         style: TextStyle(color: Colors.red),
                       )),
-                  Container(
-                    child: TextField(
-                      maxLines: 3,
-                      controller: textEditingController,
-                      keyboardType: TextInputType.text,
-                      decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: "Additional Notes",
-                          hintStyle: TextStyle(
-                              fontWeight: FontWeight.w300, fontSize: 16)),
-                    ),
+                  TextField(
+                    maxLines: 3,
+                    controller: textEditingController,
+                    keyboardType: TextInputType.text,
+                    decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: "Additional Notes",
+                        hintStyle: TextStyle(
+                            fontWeight: FontWeight.w300, fontSize: 16)),
                   ),
                 ],
               ),

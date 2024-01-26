@@ -13,11 +13,18 @@ class CourseAPI extends BaseAPI {
     required int size,
     required int page,
     required String search,
+    required String sort,
+    required List<String> levels,
     required Function(List<CourseData>, int) onSuccess,
     required Function(String) onFail,
   }) async {
+    String oderBy = sort.isNotEmpty? '&orderBy[]=$sort' : "";
+    String dataLevel = "";
+    for (String lv in levels) {
+      dataLevel += '&level[]=$lv';
+    }
     final response = await service.get(
-        url: "course?page=$page&size=$size&q=$search",
+        url: "course?page=$page&size=$size&q=$search$oderBy$dataLevel",
         headers: {"Authorization": "Bearer $accessToken"}) as BoundResource;
 
     switch (response.statusCode) {

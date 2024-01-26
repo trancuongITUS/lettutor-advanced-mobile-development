@@ -11,7 +11,7 @@ class TutorAPI extends BaseAPI {
   Future<void> becomeTutor({
     required Function() onSuccess,
   }) async {
-    final response = await service.postFormUrlEncoded(
+    await service.postFormUrlEncoded(
       url: "register",
       data: {},
     );
@@ -22,7 +22,7 @@ class TutorAPI extends BaseAPI {
     required Function() onSuccess,
     required Function(String) onFail,
   }) async {
-    final response = await service.post(
+    await service.post(
       url: "feedbackTutor",
     );
 
@@ -88,7 +88,7 @@ class TutorAPI extends BaseAPI {
   Future<void> addTutorToFavorite({
     required Function() onSuccess,
   }) async {
-    final response = await service.post(
+    await service.post(
       url: "manageFavoriteTutor",
     );
 

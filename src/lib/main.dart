@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
-import 'package:src/models/course.dart';
-import 'package:src/models/tutor.dart';
 import 'package:src/provider/authentication_provider.dart';
-import 'package:src/provider/course_provider.dart';
 import 'package:src/ui/auth/signin_page.dart';
 import 'package:src/ui/courses/courses_page.dart';
 import 'package:src/ui/history/history_page.dart';
@@ -26,10 +23,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  List<TutorModel> tutors = [];
-  List<CourseModel> courses = [];
   AuthenticationProvider authenticationProvider = AuthenticationProvider();
-  CourseProvider courseProvider = CourseProvider();
 
   Widget getWidgetByState() {
     if (null == authenticationProvider.currentUser) {
@@ -43,9 +37,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider(create: (context) => tutors),
-        Provider(create: (context) => courses),
-        ChangeNotifierProvider(create: (context) => courseProvider)
+        ChangeNotifierProvider<AuthenticationProvider>(create: (_) => authenticationProvider),
       ],
       child: MaterialApp(
           title: 'LetTutor',

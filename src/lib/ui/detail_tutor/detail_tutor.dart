@@ -5,45 +5,50 @@ import 'package:provider/provider.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:src/common/loading.dart';
 import 'package:src/models/data/tutors/tutor_data.dart';
+import 'package:src/models/data/tutors/tutor_feedback_data.dart';
 import 'package:src/models/data/tutors/tutor_info_data.dart';
 import 'package:src/provider/authentication_provider.dart';
+import 'package:src/services/feedback_api.dart';
 import 'package:src/services/tutor_api.dart';
 import 'package:src/services/user_api.dart';
 import 'package:src/ui/booking/booking.dart';
 import 'package:src/ui/detail_tutor/info_detail.dart';
 import 'package:src/ui/detail_tutor/list_reviews.dart';
 import 'package:src/ui/detail_tutor/video_intro.dart';
-import 'package:src/ui/home/home_page.dart';
 
 class DetailTutor extends StatefulWidget {
   final TutorData tutor;
-  final ChangeFavoriteCallback changeFavoriteCallback;
-  const DetailTutor(this.tutor, this.changeFavoriteCallback, {super.key});
+  const DetailTutor(this.tutor, {super.key});
 
   @override
   State<DetailTutor> createState() => _DetailTutorState();
 }
 
 class _DetailTutorState extends State<DetailTutor> {
-  late TutorData tutor;
+
+  late List<TutorFeedbackData> feedbacks = [];
   late TutorInfoData tutorInfo;
+  bool isFavorite = false;
   bool isLoading = true;
 
   @override
   void initState() {
     setState(() {
-      tutor = widget.tutor;
+      isFavorite = widget.tutor.isFavoriteTutor!;
     });
     super.initState();
   }
 
   @override
-  void didChangeDependencies() {
+  void didChangeDependencies() async {
     super.didChangeDependencies();
-    setState(() {
-      tutor = widget.tutor;
+    await Future.wait([callAPIGetTutorById(TutorAPI(), Provider.of<AuthenticationProvider>(context, listen: false), widget.tutor.userId!)]).whenComplete(() {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     });
-    callAPIGetTutorById(TutorAPI(), Provider.of<AuthenticationProvider>(context, listen: false), tutor.userId!);
   }
 
   Future<void> callAPIGetTutorById(TutorAPI tutorAPI, AuthenticationProvider authenticationProvider, String userId) async {
@@ -63,16 +68,33 @@ class _DetailTutorState extends State<DetailTutor> {
       });
   }
 
+  Future<void> callAPIGetFeedbackOfTutor(FeedbackAPI feedbackAPI, AuthenticationProvider authenticationProvider, String? userId) async {
+    await feedbackAPI.getFeedBackOfTutor(
+      accessToken: authenticationProvider.token?.access?.token ?? "",
+      page: 1,
+      perPage: 20,
+      tutorId: userId ?? "",
+      onSuccess: (response, total) async {
+        setState(() {
+          feedbacks = response;
+        });
+      },
+      onFail: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${error.toString()}')),
+        );
+      });
+  }
+
   Future<void> callApiManageFavoriteTutor(String tutorID, AuthenticationProvider authenticationProvider) async {
     UserAPI userAPI = UserAPI();
 
-
     await userAPI.favoriteTutor(
         accessToken: authenticationProvider.token?.access?.token ?? "",
-        tutorId: tutorID!,
+        tutorId: tutorID,
         onSuccess: (message, unfavored) async {
           setState(() {
-            widget.changeFavoriteCallback(tutorID);
+            isFavorite = isFavorite;
           });
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -98,7 +120,7 @@ class _DetailTutorState extends State<DetailTutor> {
       isLoading = true;
     });
     await Future.wait([
-      callAPIGetTutorById(TutorAPI(), Provider.of<AuthenticationProvider>(context, listen: false), tutor.userId!),
+      callAPIGetTutorById(TutorAPI(), Provider.of<AuthenticationProvider>(context, listen: false), widget.tutor.userId!),
     ]).whenComplete(() {
       setState(() {
         isLoading = false;
@@ -176,7 +198,7 @@ class _DetailTutorState extends State<DetailTutor> {
         onRefresh: () async {
           await refreshHome();
         },
-        child: (isLoading || null == tutor) ? const Loading() : SingleChildScrollView(
+        child: (isLoading) ? const Loading() : SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.all(25),
           child: Column(children: [
@@ -193,7 +215,7 @@ class _DetailTutorState extends State<DetailTutor> {
                     ),
                   ),
                   child: ClipOval(
-                    child: Image.network(tutor.avatar!),
+                    child: Image.network(widget.tutor.avatar!),
                   ),
                 ),
                 const SizedBox(
@@ -204,7 +226,7 @@ class _DetailTutorState extends State<DetailTutor> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Text(
-                      tutor.name!,
+                      widget.tutor.name!,
                       style: const TextStyle(
                           fontWeight: FontWeight.w500, fontSize: 22),
                     ),
@@ -213,7 +235,7 @@ class _DetailTutorState extends State<DetailTutor> {
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
-                      children: generateRatings(tutor.rating ?? 0.0)
+                      children: generateRatings(widget.tutor.rating ?? 0.0)
                     ),
                     const SizedBox(
                       height: 10,
@@ -228,7 +250,7 @@ class _DetailTutorState extends State<DetailTutor> {
                           width: 3,
                         ),
                         Text(
-                          tutor.country!,
+                          widget.tutor.country!,
                           style: const TextStyle(
                             fontWeight: FontWeight.w400,
                             color: Colors.black54,
@@ -244,7 +266,7 @@ class _DetailTutorState extends State<DetailTutor> {
               height: 15,
             ),
             ExpandableText(
-              tutor.bio!,
+              widget.tutor.bio!,
               expandText: 'More',
               collapseText: 'Less',
               maxLines: 2,
@@ -260,16 +282,19 @@ class _DetailTutorState extends State<DetailTutor> {
                   children: [
                     IconButton(
                         onPressed: () {
-                          callApiManageFavoriteTutor(tutor.userId!, authProvider);
+                          setState(() {
+                            isFavorite = !isFavorite;
+                          });
+                          callApiManageFavoriteTutor(widget.tutor.userId!, authProvider);
                         },
                         icon: Icon(
-                          tutorInfo.isFavorite! ? Icons.favorite : Icons.favorite_border,
-                          color: tutorInfo.isFavorite! ? Colors.red : Colors.blueAccent,
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorite ? Colors.red : Colors.blueAccent,
                           size: 25,
                         )),
                     Text(
                       "Favorite",
-                      style: TextStyle(color: tutorInfo.isFavorite! ? Colors.red : Colors.blueAccent),
+                      style: TextStyle(color: isFavorite ? Colors.red : Colors.blueAccent),
                     )
                   ],
                 ),
@@ -298,7 +323,7 @@ class _DetailTutorState extends State<DetailTutor> {
             ChewieDemo(linkVideo: tutorInfo.video!,),
             InfoDetail(tutorInfo),
             const SizedBox(height: 20),
-            ListReview(tutor.feedbacks?.sublist(0, 10) ?? []),
+            ListReview(feedbacks),
             const SizedBox(height: 20),
             Booking(tutor: widget.tutor)
           ]

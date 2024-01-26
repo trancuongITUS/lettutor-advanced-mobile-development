@@ -133,7 +133,7 @@ class _TutorState extends State<Tutor> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => DetailTutor(widget.tutor, widget.changeFavoriteCallback)),
+                            builder: (context) => DetailTutor(widget.tutor)),
                       );
                     },
                     child: Container(
@@ -163,7 +163,7 @@ class _TutorState extends State<Tutor> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => DetailTutor(widget.tutor, widget.changeFavoriteCallback)),
+                                builder: (context) => DetailTutor(widget.tutor)),
                           );
                         },
                         child: Text(
@@ -226,7 +226,7 @@ class _TutorState extends State<Tutor> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => DetailTutor(widget.tutor, widget.changeFavoriteCallback)),
+                          builder: (context) => DetailTutor(widget.tutor)),
                     );
                   },
                   style: ButtonStyle(

@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
+import 'package:src/common/loading.dart';
+import 'package:src/models/data/courses/course_data.dart';
 import 'package:src/provider/authentication_provider.dart';
+import 'package:src/services/course_api.dart';
+import 'package:src/ui/courses/content.dart';
 import 'package:src/ui/courses/filter.dart';
-import 'package:src/ui/courses/list_courses.dart';
+import 'package:src/ui/courses/search_courses.dart';
 import 'package:src/ui/home/home_page.dart';
 import 'package:src/ui/history/history_page.dart';
 
 import '../schedule/schedule_page.dart';
+
+typedef FilterCourseCallback = void Function(String sort, List<String> levels);
+typedef SearchCourseCallback = void Function(String keyword);
 
 class CoursesPage extends StatefulWidget {
   const CoursesPage({super.key});
@@ -18,8 +24,123 @@ class CoursesPage extends StatefulWidget {
 }
 
 class _CoursesPageState extends State<CoursesPage> {
+  String keyword = "";
+  String sort = "";
+  List<String> levels = [];
+
+  List<CourseData> courses = [];
+  Map<String, List<CourseData>> groupedCourses = {};
+  bool hasCallApi = false;
+  bool isLoading = true;
+
+  Future<void> callAPIGetCourses(
+      int page,
+      CourseAPI courseAPI,
+      AuthenticationProvider authenticationProvider,
+      String keyword,
+      String sort,
+      List<String> level) async {
+    await courseAPI.getCourseListWithPagination(
+      accessToken: authenticationProvider.token?.access?.token ?? "",
+      search: keyword,
+      sort: sort,
+      levels: level,
+      page: page,
+      size: 100,
+      onSuccess: (response, total) async {
+        Map<String, List<CourseData>> groupedCoursesTemp = {};
+
+        for (CourseData course in response) {
+          if (groupedCoursesTemp.containsKey(course.categories![0].title)) {
+            groupedCoursesTemp[course.categories![0].title]!.add(course);
+          } else {
+            groupedCoursesTemp[course.categories![0].title!] = [course];
+          }
+        }
+        setState(() {
+          groupedCourses = groupedCoursesTemp;
+          hasCallApi = true;
+          isLoading = false;
+        });
+      },
+      onFail: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${error.toString()}')),
+        );
+      });
+    }
+
+  @override
+  Future<void> didChangeDependencies() async {
+    super.didChangeDependencies();
+    var authenticationProvider = Provider.of<AuthenticationProvider>(context, listen: false);
+
+    if (!hasCallApi) {
+      setState(() {
+        isLoading = true;
+      });
+
+      await Future.wait([callAPIGetCourses(1, CourseAPI(), authenticationProvider, keyword, sort, levels)]).whenComplete(() {
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+            hasCallApi = true;
+          });
+        }
+      });
+    }
+  }
+
+  Future<void> refreshHome(AuthenticationProvider authenticationProvider) async {
+    setState(() {
+      courses = [];
+      groupedCourses = {};
+      isLoading = true;
+    });
+    await Future.wait([
+      callAPIGetCourses(1, CourseAPI(), authenticationProvider, keyword, sort, levels)]).whenComplete(() {
+        setState(() {
+          isLoading = false;
+        });
+      return Future<void>.delayed(const Duration(seconds: 0));
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authenticationProvider = Provider.of<AuthenticationProvider>(context, listen: false);
+
+    
+
+    void filterCallback(String sort, List<String> levels) {
+      String realSort = "";
+      switch (sort) {
+        case '':
+          realSort = "";
+          break;
+        case "Level ascending":
+          realSort = "ASC";
+          break;
+        case "Level decreasing":
+          realSort = "DESC";
+          break;
+      }
+
+      setState(() {
+        sort = realSort;
+        levels = levels;
+      });
+      callAPIGetCourses(1, CourseAPI(), authenticationProvider, keyword, sort, levels);
+    }
+
+    void searchCourseCallback(String keyword) {
+      setState(() {
+        keyword = keyword;
+      });
+      callAPIGetCourses(1, CourseAPI(), authenticationProvider, keyword, sort, levels);
+    }
+
+
     return Scaffold(
         endDrawer: Drawer(
           child: ListView(
@@ -188,138 +309,30 @@ class _CoursesPageState extends State<CoursesPage> {
                 )),
           ),
         ),
-        body: SingleChildScrollView(
+        body: RefreshIndicator(
+          onRefresh: () async {
+            refreshHome(authenticationProvider);
+          },
+        child: isLoading ? const Loading() : SingleChildScrollView(
             child: Container(
           padding: const EdgeInsets.all(25),
-          child: const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SearchCourse(),
-              SizedBox(
-                height: 15,
-              ),
-              Text(
-                  "LiveTutor has built the most quality, methodical and scientific courses in the fields of life for those who are in need of improving their knowledge of the fields."),
-              Filter(),
-              SizedBox(height: 20),
-              ListCourse(),
-              SizedBox(height: 10),
-            ],
-          ),
-        )));
-  }
-}
-
-class SearchCourse extends StatefulWidget {
-  const SearchCourse({super.key});
-
-  @override
-  State<SearchCourse> createState() => _SearchCourseState();
-}
-
-class _SearchCourseState extends State<SearchCourse> {
-  final TextEditingController _textEditingDate = TextEditingController();
-  bool isEmpty = true;
-
-  void checkTextEmpty(String value) {
-    setState(() {
-      isEmpty = value.isEmpty;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SvgPicture.asset(
-          'img/ScreenCourse.svg',
-          width: 100,
-          height: 100,
-        ),
-        const SizedBox(
-          width: 20,
-        ),
-        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Discover Courses",
-                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 22),
-              ),
+              SearchCourse(searchCourseCallback),
               const SizedBox(
-                height: 10,
+                height: 15,
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Expanded(
-                      flex: 5,
-                      child: Container(
-                        height: 35,
-                        padding: const EdgeInsets.only(left: 10, right: 0),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.grey,
-                            width: 1.0,
-                          ),
-                          color: Colors.white,
-                        ),
-                        child: TextField(
-                          controller: _textEditingDate,
-                          onChanged: (value) => {checkTextEmpty(value)},
-                          decoration: InputDecoration(
-                              contentPadding:
-                                  const EdgeInsets.only(top: -4, left: 0),
-                              border: InputBorder.none,
-                              hintText: "Course",
-                              hintStyle: const TextStyle(
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w400),
-                              suffixIcon: Visibility(
-                                visible: !isEmpty,
-                                child: IconButton(
-                                  icon: const Icon(
-                                    Icons.highlight_remove_outlined,
-                                    color: Colors.black54,
-                                    size: 16,
-                                  ),
-                                  onPressed: () {
-                                    _textEditingDate.text = "";
-                                  },
-                                ),
-                              )),
-                          style: const TextStyle(
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w400,
-                              fontSize: 16),
-                        ),
-                      )),
-                  Expanded(
-                      flex: 1,
-                      child: Container(
-                        height: 35,
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.grey,
-                            width: 1.0,
-                          ),
-                          color: Colors.white,
-                        ),
-                        child: IconButton(
-                            onPressed: () {},
-                            icon: const Icon(
-                              Icons.search_rounded,
-                              size: 25,
-                              color: Colors.grey,
-                            )),
-                      ))
-                ],
-              )
+              const Text(
+                  "LiveTutor has built the most quality, methodical and scientific courses in the fields of life for those who are in need of improving their knowledge of the fields."),
+              Filter(filterCallback),
+              const SizedBox(height: 20),
+              Content(courses, groupedCourses),
+              const SizedBox(height: 10),
             ],
           ),
+        ))
         )
-      ],
-    );
+      );
   }
 }

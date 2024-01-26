@@ -14,7 +14,7 @@ class SearchTutor extends StatefulWidget {
 
 class _SearchTutorState extends State<SearchTutor> {
   DateTime selectDate = DateTime.now();
-  final TextEditingController _textEditingDate = TextEditingController();
+  // final TextEditingController _textEditingDate = TextEditingController();
   final TextEditingController _textName = TextEditingController();
   final List<String> _items = [
     "Foreign Tutor",

@@ -34,6 +34,8 @@ dependencies:
   cached_network_image: ^3.3.0
   flutter_countdown_timer: ^4.1.0
   pagination_flutter: ^0.0.8
+  jwt_decoder: ^2.0.1
+  jitsi_meet_wrapper: ^0.2.0+1
 
 dev_dependencies:
   flutter_test:
